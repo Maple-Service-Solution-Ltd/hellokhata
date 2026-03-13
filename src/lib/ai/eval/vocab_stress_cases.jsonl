@@ -1,0 +1,122 @@
+{"id": 1, "query": "due?", "expectedIntent": "query", "expectedEntities": {}, "category": "short_query", "language": "en"}
+{"id": 2, "query": "বকেয়া?", "expectedIntent": "query", "expectedEntities": {}, "category": "short_query", "language": "bn"}
+{"id": 3, "query": "profit?", "expectedIntent": "query", "expectedEntities": {}, "category": "short_query", "language": "en"}
+{"id": 4, "query": "লাভ?", "expectedIntent": "query", "expectedEntities": {}, "category": "short_query", "language": "bn"}
+{"id": 5, "query": "sales?", "expectedIntent": "query", "expectedEntities": {}, "category": "short_query", "language": "en"}
+{"id": 6, "query": "বিক্রি?", "expectedIntent": "query", "expectedEntities": {}, "category": "short_query", "language": "bn"}
+{"id": 7, "query": "stock?", "expectedIntent": "query", "expectedEntities": {}, "category": "short_query", "language": "en"}
+{"id": 8, "query": "স্টক?", "expectedIntent": "query", "expectedEntities": {}, "category": "short_query", "language": "bn"}
+{"id": 9, "query": "expense?", "expectedIntent": "query", "expectedEntities": {}, "category": "short_query", "language": "en"}
+{"id": 10, "query": "খরচ?", "expectedIntent": "query", "expectedEntities": {}, "category": "short_query", "language": "bn"}
+{"id": 11, "query": "aajker sales", "expectedIntent": "query", "expectedEntities": {"period": "today"}, "category": "mixed", "language": "mixed"}
+{"id": 12, "query": "today'r bikri koto?", "expectedIntent": "query", "expectedEntities": {"period": "today"}, "category": "mixed", "language": "mixed"}
+{"id": 13, "query": "gata kal'r profit", "expectedIntent": "query", "expectedEntities": {"period": "yesterday"}, "category": "mixed", "language": "mixed"}
+{"id": 14, "query": "last week'r shob khoroch", "expectedIntent": "query", "expectedEntities": {"period": "this_week"}, "category": "mixed", "language": "mixed"}
+{"id": 15, "query": "amar stock e ki ki ase?", "expectedIntent": "query", "expectedEntities": {}, "category": "implicit", "language": "bn"}
+{"id": 16, "query": "what do I have in stock?", "expectedIntent": "query", "expectedEntities": {}, "category": "implicit", "language": "en"}
+{"id": 17, "query": "koto taka pawa gelo?", "expectedIntent": "query", "expectedEntities": {}, "category": "implicit", "language": "bn"}
+{"id": 18, "query": "how much money came in?", "expectedIntent": "query", "expectedEntities": {}, "category": "implicit", "language": "en"}
+{"id": 19, "query": "ke ke baki ase?", "expectedIntent": "query", "expectedEntities": {}, "category": "implicit", "language": "bn"}
+{"id": 20, "query": "who owes me money?", "expectedIntent": "query", "expectedEntities": {}, "category": "implicit", "language": "en"}
+{"id": 21, "query": "Rahim er kache 2ta coke biki", "expectedIntent": "create_sale", "expectedEntities": {"quantity": 2, "partyName": "Rahim"}, "category": "slang", "language": "mixed"}
+{"id": 22, "query": "sold 5pcs biscuit to Karim bhai", "expectedIntent": "create_sale", "expectedEntities": {"quantity": 5, "itemName": "biscuit", "partyName": "Karim"}, "category": "slang", "language": "en"}
+{"id": 23, "query": "Fatema apa ke 3kg chal dilem", "expectedIntent": "create_sale", "expectedEntities": {"quantity": 3, "partyName": "Fatema"}, "category": "slang", "language": "bn"}
+{"id": 24, "query": "baki te 1000 taka'r mal dilam", "expectedIntent": "create_sale", "expectedEntities": {"paymentMethod": "credit"}, "category": "slang", "language": "bn"}
+{"id": 25, "query": "on credit sold some items to that guy", "expectedIntent": "create_sale", "expectedEntities": {"paymentMethod": "credit"}, "category": "slang", "language": "en"}
+{"id": 26, "query": "kas e 500 nilam", "expectedIntent": "create_payment", "expectedEntities": {"amount": 500, "paymentMethod": "cash"}, "category": "slang", "language": "bn"}
+{"id": 27, "query": "bkash e 2000 elo", "expectedIntent": "create_payment", "expectedEntities": {"amount": 2000, "paymentMethod": "mobile_banking"}, "category": "slang", "language": "bn"}
+{"id": 28, "query": "nagad pay hoiche 1500", "expectedIntent": "create_payment", "expectedEntities": {"amount": 1500, "paymentMethod": "mobile_banking"}, "category": "slang", "language": "bn"}
+{"id": 29, "query": "khoroch holo 500 taka rasta'r jonno", "expectedIntent": "create_expense", "expectedEntities": {"amount": 500}, "category": "slang", "language": "bn"}
+{"id": 30, "query": "spent some money on tea and snacks", "expectedIntent": "create_expense", "expectedEntities": {}, "category": "slang", "language": "en"}
+{"id": 31, "query": "Rahim er 500 taka baaki chilo, aj 300 taka pelam", "expectedIntent": "create_payment", "expectedEntities": {"amount": 300, "partyName": "Rahim"}, "category": "partial_payment", "language": "bn"}
+{"id": 32, "query": "Karim owed 1000, paid 500 today", "expectedIntent": "create_payment", "expectedEntities": {"amount": 500, "partyName": "Karim"}, "category": "partial_payment", "language": "en"}
+{"id": 33, "query": "Rahim and Rahim Uddin - which one paid?", "expectedIntent": "query", "expectedEntities": {}, "category": "duplicate_names", "language": "en"}
+{"id": 34, "query": "Karim bhai and Karim Miah - dui jonei same name", "expectedIntent": "query", "expectedEntities": {}, "category": "duplicate_names", "language": "mixed"}
+{"id": 35, "query": "sold 5 xyz items to customer", "expectedIntent": "create_sale", "expectedEntities": {"quantity": 5, "itemName": "xyz"}, "category": "missing_item", "language": "en"}
+{"id": 36, "query": "abc product ta stock e nai kintu biki korlam", "expectedIntent": "create_sale", "expectedEntities": {"itemName": "abc"}, "category": "missing_item", "language": "bn"}
+{"id": 37, "query": "not enough stock for rice but customer wants 50kg", "expectedIntent": "create_sale", "expectedEntities": {"quantity": 50, "itemName": "rice"}, "category": "insufficient_stock", "language": "en"}
+{"id": 38, "query": "stock e 5kg chal ase kintu 10kg lagbe", "expectedIntent": "create_sale", "expectedEntities": {"quantity": 10, "itemName": "chal"}, "category": "insufficient_stock", "language": "bn"}
+{"id": 39, "query": "sold 2kg rice, 1kg dal, 3 bottles oil to customer", "expectedIntent": "create_sale", "expectedEntities": {}, "category": "multi_item", "language": "en"}
+{"id": 40, "query": "2kg chal, 1kg uri, 5ti dim biki korlam", "expectedIntent": "create_sale", "expectedEntities": {}, "category": "multi_item", "language": "bn"}
+{"id": 41, "query": "change sale #INV001 - add 1 more item", "expectedIntent": "update_sale", "expectedEntities": {"invoiceNo": "INV001"}, "category": "update_sale", "language": "en"}
+{"id": 42, "query": "invoice INV001 e arekta item add koro", "expectedIntent": "update_sale", "expectedEntities": {"invoiceNo": "INV001"}, "category": "update_sale", "language": "bn"}
+{"id": 43, "query": "cancel last sale", "expectedIntent": "update_sale", "expectedEntities": {}, "category": "cancel_sale", "language": "en"}
+{"id": 44, "query": "ager biki ta cancel koro", "expectedIntent": "update_sale", "expectedEntities": {}, "category": "cancel_sale", "language": "bn"}
+{"id": 45, "query": "return 2 items from invoice #INV005", "expectedIntent": "update_sale", "expectedEntities": {"invoiceNo": "INV005"}, "category": "cancel_sale", "language": "en"}
+{"id": 46, "query": "INV005 theke 2ta product ferot", "expectedIntent": "update_sale", "expectedEntities": {"invoiceNo": "INV005"}, "category": "cancel_sale", "language": "bn"}
+{"id": 47, "query": "gato shoptaher lab", "expectedIntent": "query", "expectedEntities": {"period": "this_week"}, "category": "bangla", "language": "bn"}
+{"id": 48, "query": "goto shoptaher labh", "expectedIntent": "query", "expectedEntities": {"period": "this_week"}, "category": "bangla", "language": "bn"}
+{"id": 49, "query": "ajker sob bikri", "expectedIntent": "query", "expectedEntities": {"period": "today"}, "category": "bangla", "language": "bn"}
+{"id": 50, "query": "aajker total sales", "expectedIntent": "query", "expectedEntities": {"period": "today"}, "category": "bangla", "language": "bn"}
+{"id": 51, "query": "amar dinito koto?", "expectedIntent": "query", "expectedEntities": {}, "category": "bangla", "language": "bn"}
+{"id": 52, "query": "koto dena laglo?", "expectedIntent": "query", "expectedEntities": {}, "category": "bangla", "language": "bn"}
+{"id": 53, "query": "paoa koto?", "expectedIntent": "query", "expectedEntities": {}, "category": "bangla", "language": "bn"}
+{"id": 54, "query": "receivable koto?", "expectedIntent": "query", "expectedEntities": {}, "category": "banglish", "language": "mixed"}
+{"id": 55, "query": "payable amount koto?", "expectedIntent": "query", "expectedEntities": {}, "category": "banglish", "language": "mixed"}
+{"id": 56, "query": "profit last week?", "expectedIntent": "query", "expectedEntities": {"period": "this_week"}, "category": "short_query", "language": "en"}
+{"id": 57, "query": "profit gata shoptahe?", "expectedIntent": "query", "expectedEntities": {"period": "this_week"}, "category": "bangla", "language": "bn"}
+{"id": 58, "query": "sales today", "expectedIntent": "query", "expectedEntities": {"period": "today"}, "category": "short_query", "language": "en"}
+{"id": 59, "query": "bikri ajke", "expectedIntent": "query", "expectedEntities": {"period": "today"}, "category": "bangla", "language": "bn"}
+{"id": 60, "query": "ajke biki koto?", "expectedIntent": "query", "expectedEntities": {"period": "today"}, "category": "bangla", "language": "bn"}
+{"id": 61, "query": "give me sales today", "expectedIntent": "query", "expectedEntities": {"period": "today"}, "category": "implicit", "language": "en"}
+{"id": 62, "query": "ajker bikri ta dekhao", "expectedIntent": "query", "expectedEntities": {"period": "today"}, "category": "bangla", "language": "bn"}
+{"id": 63, "query": "Rahim payed 500", "expectedIntent": "create_payment", "expectedEntities": {"amount": 500, "partyName": "Rahim"}, "category": "typo", "language": "en"}
+{"id": 64, "query": "Rahim 500 taka diyeche", "expectedIntent": "create_payment", "expectedEntities": {"amount": 500, "partyName": "Rahim"}, "category": "bangla", "language": "bn"}
+{"id": 65, "query": "how much receivable right now?", "expectedIntent": "query", "expectedEntities": {}, "category": "implicit", "language": "en"}
+{"id": 66, "query": "ekhon paoa koto?", "expectedIntent": "query", "expectedEntities": {}, "category": "bangla", "language": "bn"}
+{"id": 67, "query": "payable koto right now", "expectedIntent": "query", "expectedEntities": {}, "category": "mixed", "language": "mixed"}
+{"id": 68, "query": "ekhon dena koto?", "expectedIntent": "query", "expectedEntities": {}, "category": "bangla", "language": "bn"}
+{"id": 69, "query": "shob customer der due", "expectedIntent": "query", "expectedEntities": {}, "category": "bangla", "language": "bn"}
+{"id": 70, "query": "all customers dues", "expectedIntent": "query", "expectedEntities": {}, "category": "implicit", "language": "en"}
+{"id": 71, "query": "supplier der dena", "expectedIntent": "query", "expectedEntities": {"partyType": "supplier"}, "category": "bangla", "language": "bn"}
+{"id": 72, "query": "suppliers money owed", "expectedIntent": "query", "expectedEntities": {"partyType": "supplier"}, "category": "implicit", "language": "en"}
+{"id": 73, "query": "ajke koto laab holo?", "expectedIntent": "query", "expectedEntities": {"period": "today"}, "category": "bangla", "language": "bn"}
+{"id": 74, "query": "today's income?", "expectedIntent": "query", "expectedEntities": {"period": "today"}, "category": "short_query", "language": "en"}
+{"id": 75, "query": "ajker income koto?", "expectedIntent": "query", "expectedEntities": {"period": "today"}, "category": "banglish", "language": "mixed"}
+{"id": 76, "query": "ei mash er total khoroch", "expectedIntent": "query", "expectedEntities": {"period": "this_month"}, "category": "bangla", "language": "bn"}
+{"id": 77, "query": "this month total expenses", "expectedIntent": "query", "expectedEntities": {"period": "this_month"}, "category": "implicit", "language": "en"}
+{"id": 78, "query": "ei shoptaher labh dekhao", "expectedIntent": "query", "expectedEntities": {"period": "this_week"}, "category": "bangla", "language": "bn"}
+{"id": 79, "query": "show this week profit", "expectedIntent": "query", "expectedEntities": {"period": "this_week"}, "category": "implicit", "language": "en"}
+{"id": 80, "query": "got 7 din er report", "expectedIntent": "query", "expectedEntities": {"period": "last_7_days"}, "category": "banglish", "language": "mixed"}
+{"id": 81, "query": "last 7 days report", "expectedIntent": "query", "expectedEntities": {"period": "last_7_days"}, "category": "implicit", "language": "en"}
+{"id": 82, "query": "ei mash er sales summary", "expectedIntent": "query", "expectedEntities": {"period": "this_month"}, "category": "banglish", "language": "mixed"}
+{"id": 83, "query": "this month sales summary", "expectedIntent": "query", "expectedEntities": {"period": "this_month"}, "category": "implicit", "language": "en"}
+{"id": 84, "query": "new customer add koro - Rahim", "expectedIntent": "create_party", "expectedEntities": {"partyName": "Rahim"}, "category": "create_party", "language": "mixed"}
+{"id": 85, "query": "add new customer named Karim", "expectedIntent": "create_party", "expectedEntities": {"partyName": "Karim"}, "category": "create_party", "language": "en"}
+{"id": 86, "query": "nana supplier - Abdul Bari", "expectedIntent": "create_party", "expectedEntities": {"partyName": "Abdul Bari", "partyType": "supplier"}, "category": "create_party", "language": "bn"}
+{"id": 87, "query": "create new supplier - ABC Trading", "expectedIntent": "create_party", "expectedEntities": {"partyName": "ABC Trading", "partyType": "supplier"}, "category": "create_party", "language": "en"}
+{"id": 88, "query": "new item add koro - Candle", "expectedIntent": "create_item", "expectedEntities": {"itemName": "Candle"}, "category": "create_item", "language": "mixed"}
+{"id": 89, "query": "add new product - Match Box", "expectedIntent": "create_item", "expectedEntities": {"itemName": "Match Box"}, "category": "create_item", "language": "en"}
+{"id": 90, "query": "notun item - Agun er katchi", "expectedIntent": "create_item", "expectedEntities": {"itemName": "Agun er katchi"}, "category": "create_item", "language": "bn"}
+{"id": 91, "query": "Rahim er phone number update koro", "expectedIntent": "update_party", "expectedEntities": {"partyName": "Rahim"}, "category": "update_party", "language": "bn"}
+{"id": 92, "query": "update Karim's phone number", "expectedIntent": "update_party", "expectedEntities": {"partyName": "Karim"}, "category": "update_party", "language": "en"}
+{"id": 93, "query": "Rahim er address change", "expectedIntent": "update_party", "expectedEntities": {"partyName": "Rahim"}, "category": "update_party", "language": "mixed"}
+{"id": 94, "query": "change Fatema's address", "expectedIntent": "update_party", "expectedEntities": {"partyName": "Fatema"}, "category": "update_party", "language": "en"}
+{"id": 95, "query": "customer list dekhao", "expectedIntent": "query", "expectedEntities": {"partyType": "customer"}, "category": "bangla", "language": "bn"}
+{"id": 96, "query": "show all customers", "expectedIntent": "query", "expectedEntities": {"partyType": "customer"}, "category": "implicit", "language": "en"}
+{"id": 97, "query": "supplier der list", "expectedIntent": "query", "expectedEntities": {"partyType": "supplier"}, "category": "bangla", "language": "bn"}
+{"id": 98, "query": "list all suppliers", "expectedIntent": "query", "expectedEntities": {"partyType": "supplier"}, "category": "implicit", "language": "en"}
+{"id": 99, "query": "best selling items", "expectedIntent": "query", "expectedEntities": {"itemName": "top_selling"}, "category": "implicit", "language": "en"}
+{"id": 100, "query": "sobcheye beshi biki hoyeche", "expectedIntent": "query", "expectedEntities": {"itemName": "top_selling"}, "category": "bangla", "language": "bn"}
+{"id": 101, "query": "low stock e ki ki ache?", "expectedIntent": "query", "expectedEntities": {"itemName": "low_stock"}, "category": "bangla", "language": "bn"}
+{"id": 102, "query": "what items are running low?", "expectedIntent": "query", "expectedEntities": {"itemName": "low_stock"}, "category": "implicit", "language": "en"}
+{"id": 103, "query": "stock shortage ki ki?", "expectedIntent": "query", "expectedEntities": {"itemName": "low_stock"}, "category": "bangla", "language": "bn"}
+{"id": 104, "query": "inventory shortage report", "expectedIntent": "query", "expectedEntities": {"itemName": "low_stock"}, "category": "implicit", "language": "en"}
+{"id": 105, "query": "kashe 5000 taka exp", "expectedIntent": "create_expense", "expectedEntities": {"amount": 5000}, "category": "short_query", "language": "mixed"}
+{"id": 106, "query": "cash expense 5000 taka", "expectedIntent": "create_expense", "expectedEntities": {"amount": 5000}, "category": "implicit", "language": "mixed"}
+{"id": 107, "query": "office khoroch 2000", "expectedIntent": "create_expense", "expectedEntities": {"amount": 2000, "description": "office"}, "category": "bangla", "language": "bn"}
+{"id": 108, "query": "office expense 2000", "expectedIntent": "create_expense", "expectedEntities": {"amount": 2000, "description": "office"}, "category": "implicit", "language": "en"}
+{"id": 109, "query": "transport khoroch 1500", "expectedIntent": "create_expense", "expectedEntities": {"amount": 1500, "description": "transport"}, "category": "bangla", "language": "bn"}
+{"id": 110, "query": "transport cost 1500", "expectedIntent": "create_expense", "expectedEntities": {"amount": 1500, "description": "transport"}, "category": "implicit", "language": "en"}
+{"id": 111, "query": "Rahim 500 baki chilo, aj 500 purno pelam", "expectedIntent": "create_payment", "expectedEntities": {"amount": 500, "partyName": "Rahim"}, "category": "partial_payment", "language": "bn"}
+{"id": 112, "query": "Karim's due was 2000, received full today", "expectedIntent": "create_payment", "expectedEntities": {"partyName": "Karim"}, "category": "partial_payment", "language": "en"}
+{"id": 113, "query": "3 products - rice, dal, oil - sold to one customer", "expectedIntent": "create_sale", "expectedEntities": {}, "category": "multi_item", "language": "en"}
+{"id": 114, "query": "ek customer ke chal, uri, tel 3ta biki", "expectedIntent": "create_sale", "expectedEntities": {}, "category": "multi_item", "language": "bn"}
+{"id": 115, "query": "invoice #INV010 er details dekhao", "expectedIntent": "query", "expectedEntities": {"invoiceNo": "INV010"}, "category": "bangla", "language": "bn"}
+{"id": 116, "query": "show invoice INV010 details", "expectedIntent": "query", "expectedEntities": {"invoiceNo": "INV010"}, "category": "implicit", "language": "en"}
+{"id": 117, "query": "bill #BILL001 er info", "expectedIntent": "query", "expectedEntities": {"invoiceNo": "BILL001"}, "category": "banglish", "language": "mixed"}
+{"id": 118, "query": "bill BILL001 info", "expectedIntent": "query", "expectedEntities": {"invoiceNo": "BILL001"}, "category": "implicit", "language": "en"}
+{"id": 119, "query": "Rahim, Rahim Uddin, Rahim Miah - 3 jon same name er customer", "expectedIntent": "query", "expectedEntities": {}, "category": "duplicate_names", "language": "bn"}
+{"id": 120, "query": "multiple customers with similar names - how to differentiate?", "expectedIntent": "query", "expectedEntities": {}, "category": "duplicate_names", "language": "en"}
+{"id": 121, "query": "ajker sales summary in table", "expectedIntent": "query", "expectedEntities": {"period": "today"}, "category": "implicit", "language": "en"}
+{"id": 122, "query": "ajker bikri table akare dekhao", "expectedIntent": "query", "expectedEntities": {"period": "today"}, "category": "bangla", "language": "bn"}

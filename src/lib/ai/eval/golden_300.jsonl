@@ -1,0 +1,100 @@
+{"id": 1, "query": "what are today's sales?", "expectedIntent": "query", "expectedEntities": {"period": "today"}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 2, "query": "আজকের বিক্রি কত?", "expectedIntent": "query", "expectedEntities": {"period": "today"}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 3, "query": "sold 2 cokes to Rahim", "expectedIntent": "create_sale", "expectedEntities": {"quantity": 2, "itemName": "cokes", "partyName": "Rahim"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 4, "query": "রহিমের কাছে ৩টা কোল্ড ড্রিংক বিক্রি করলাম", "expectedIntent": "create_sale", "expectedEntities": {"quantity": 3, "partyName": "রহিম"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 5, "query": "what was yesterday's profit?", "expectedIntent": "query", "expectedEntities": {"period": "yesterday"}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 6, "query": "গতকালের লাভ কত?", "expectedIntent": "query", "expectedEntities": {"period": "yesterday"}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 7, "query": "show me this month's expenses", "expectedIntent": "query", "expectedEntities": {"period": "this_month"}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 8, "query": "এই মাসের খরচ দেখাও", "expectedIntent": "query", "expectedEntities": {"period": "this_month"}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 9, "query": "spent 500 taka on transport", "expectedIntent": "create_expense", "expectedEntities": {"amount": 500, "description": "transport"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 10, "query": "পরিবহনে ৫০০ টাকা খরচ হয়েছে", "expectedIntent": "create_expense", "expectedEntities": {"amount": 500, "description": "পরিবহন"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 11, "query": "received 1000 from Karim", "expectedIntent": "create_payment", "expectedEntities": {"amount": 1000, "partyName": "Karim"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 12, "query": "করিম থেকে ১০০০ টাকা পেয়েছি", "expectedIntent": "create_payment", "expectedEntities": {"amount": 1000, "partyName": "করিম"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 13, "query": "how much stock do I have?", "expectedIntent": "query", "expectedEntities": {}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 14, "query": "আমার স্টক কত?", "expectedIntent": "query", "expectedEntities": {}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 15, "query": "what is my receivable?", "expectedIntent": "query", "expectedEntities": {}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 16, "query": "পাওনা কত?", "expectedIntent": "query", "expectedEntities": {}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 17, "query": "how much do I owe suppliers?", "expectedIntent": "query", "expectedEntities": {}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 18, "query": "দেনা কত?", "expectedIntent": "query", "expectedEntities": {}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 19, "query": "sold 5 pens to customer", "expectedIntent": "create_sale", "expectedEntities": {"quantity": 5, "itemName": "pens"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 20, "query": "৫টা কলম বিক্রি করলাম", "expectedIntent": "create_sale", "expectedEntities": {"quantity": 5}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 21, "query": "last 7 days sales report", "expectedIntent": "query", "expectedEntities": {"period": "last_7_days"}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 22, "query": "গত ৭ দিনের বিক্রি রিপোর্ট", "expectedIntent": "query", "expectedEntities": {"period": "last_7_days"}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 23, "query": "add expense ৳200 for lunch", "expectedIntent": "create_expense", "expectedEntities": {"amount": 200, "description": "lunch"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 24, "query": "লাঞ্চের জন্য ২০০ টাকা খরচ", "expectedIntent": "create_expense", "expectedEntities": {"amount": 200, "description": "লাঞ্চ"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 25, "query": "collect payment from Rahim ৳500", "expectedIntent": "create_payment", "expectedEntities": {"amount": 500, "partyName": "Rahim"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 26, "query": "রহিম থেকে ৫০০ টাকা সংগ্রহ করলাম", "expectedIntent": "create_payment", "expectedEntities": {"amount": 500, "partyName": "রহিম"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 27, "query": "show low stock items", "expectedIntent": "query", "expectedEntities": {"itemName": "low_stock"}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 28, "query": "কম স্টক আছে এমন পণ্য দেখাও", "expectedIntent": "query", "expectedEntities": {"itemName": "low_stock"}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 29, "query": "sold 3 rice bags to Fatema on credit", "expectedIntent": "create_sale", "expectedEntities": {"quantity": 3, "itemName": "rice bags", "partyName": "Fatema", "paymentMethod": "credit"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 30, "query": "ফাতেমার কাছে ৩ বস্তা চাল বাকিতে বিক্রি করলাম", "expectedIntent": "create_sale", "expectedEntities": {"quantity": 3, "partyName": "ফাতেমা", "paymentMethod": "credit"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 31, "query": "what is today's profit?", "expectedIntent": "query", "expectedEntities": {"period": "today"}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 32, "query": "আজকের মুনাফা কত?", "expectedIntent": "query", "expectedEntities": {"period": "today"}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 33, "query": "last month expense summary", "expectedIntent": "query", "expectedEntities": {"period": "this_month"}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 34, "query": "গত মাসের খরচ সারসংক্ষেপ", "expectedIntent": "query", "expectedEntities": {"period": "this_month"}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 35, "query": "sell 10 notebooks to student", "expectedIntent": "create_sale", "expectedEntities": {"quantity": 10, "itemName": "notebooks"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 36, "query": "১০টা খাতা বিক্রি করলাম", "expectedIntent": "create_sale", "expectedEntities": {"quantity": 10}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 37, "query": "received 2500 tk via bKash", "expectedIntent": "create_payment", "expectedEntities": {"amount": 2500, "paymentMethod": "mobile_banking"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 38, "query": "বিকাশে ২৫০০ টাকা পেয়েছি", "expectedIntent": "create_payment", "expectedEntities": {"amount": 2500, "paymentMethod": "mobile_banking"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 39, "query": "paid 3000 to supplier", "expectedIntent": "create_payment", "expectedEntities": {"amount": 3000}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 40, "query": "সাপ্লায়ারকে ৩০০০ টাকা দিলাম", "expectedIntent": "create_payment", "expectedEntities": {"amount": 3000}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 41, "query": "total revenue this week", "expectedIntent": "query", "expectedEntities": {"period": "this_week"}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 42, "query": "এই সপ্তাহের মোট আয়", "expectedIntent": "query", "expectedEntities": {"period": "this_week"}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 43, "query": "expense ৳1000 for electricity", "expectedIntent": "create_expense", "expectedEntities": {"amount": 1000, "description": "electricity"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 44, "query": "বিদ্যুৎ বিল ১০০০ টাকা", "expectedIntent": "create_expense", "expectedEntities": {"amount": 1000, "description": "বিদ্যুৎ"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 45, "query": "what is my due amount?", "expectedIntent": "query", "expectedEntities": {}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 46, "query": "বকেয়া কত?", "expectedIntent": "query", "expectedEntities": {}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 47, "query": "sold 1kg sugar to walk-in", "expectedIntent": "create_sale", "expectedEntities": {"quantity": 1, "itemName": "sugar"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 48, "query": "১ কেজি চিনি বিক্রি করলাম", "expectedIntent": "create_sale", "expectedEntities": {"quantity": 1}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 49, "query": "show top selling items", "expectedIntent": "query", "expectedEntities": {"itemName": "top_selling"}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 50, "query": "সবচেয়ে বেশি বিক্রি হওয়া পণ্য দেখাও", "expectedIntent": "query", "expectedEntities": {"itemName": "top_selling"}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 51, "query": "record new sale of soap to Kamal", "expectedIntent": "create_sale", "expectedEntities": {"itemName": "soap", "partyName": "Kamal"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 52, "query": "কামালকে সাবান বিক্রি করলাম", "expectedIntent": "create_sale", "expectedEntities": {"partyName": "কামাল"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 53, "query": "how many customers do I have?", "expectedIntent": "query", "expectedEntities": {"partyType": "customer"}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 54, "query": "আমার কতজন কাস্টমার আছে?", "expectedIntent": "query", "expectedEntities": {"partyType": "customer"}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 55, "query": "list all suppliers", "expectedIntent": "query", "expectedEntities": {"partyType": "supplier"}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 56, "query": "সব সাপ্লায়ার দেখাও", "expectedIntent": "query", "expectedEntities": {"partyType": "supplier"}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 57, "query": "spent ৳5000 on rent", "expectedIntent": "create_expense", "expectedEntities": {"amount": 5000, "description": "rent"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 58, "query": "ভাড়ার জন্য ৫০০০ টাকা খরচ", "expectedIntent": "create_expense", "expectedEntities": {"amount": 5000, "description": "ভাড়া"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 59, "query": "invoice #INV001 details", "expectedIntent": "query", "expectedEntities": {"invoiceNo": "INV001"}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 60, "query": "ইনভয়েস INV001 এর বিবরণ", "expectedIntent": "query", "expectedEntities": {"invoiceNo": "INV001"}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 61, "query": "sold 2 shirts to Jamal in cash", "expectedIntent": "create_sale", "expectedEntities": {"quantity": 2, "itemName": "shirts", "partyName": "Jamal", "paymentMethod": "cash"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 62, "query": "জামালকে ২টা শার্ট নগদে বিক্রি করলাম", "expectedIntent": "create_sale", "expectedEntities": {"quantity": 2, "partyName": "জামাল", "paymentMethod": "cash"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 63, "query": "business summary today", "expectedIntent": "query", "expectedEntities": {"period": "today"}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 64, "query": "আজকের ব্যবসার সারসংক্ষেপ", "expectedIntent": "query", "expectedEntities": {"period": "today"}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 65, "query": "last 30 days profit", "expectedIntent": "query", "expectedEntities": {"period": "last_30_days"}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 66, "query": "গত ৩০ দিনের লাভ", "expectedIntent": "query", "expectedEntities": {"period": "last_30_days"}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 67, "query": "add expense for marketing ৳3000", "expectedIntent": "create_expense", "expectedEntities": {"amount": 3000, "description": "marketing"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 68, "query": "মার্কেটিং এ ৩০০০ টাকা খরচ", "expectedIntent": "create_expense", "expectedEntities": {"amount": 3000, "description": "মার্কেটিং"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 69, "query": "received payment ৳15000 from client", "expectedIntent": "create_payment", "expectedEntities": {"amount": 15000}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 70, "query": "ক্লায়েন্ট থেকে ১৫০০০ টাকা পেয়েছি", "expectedIntent": "create_payment", "expectedEntities": {"amount": 15000}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 71, "query": "check inventory status", "expectedIntent": "query", "expectedEntities": {}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 72, "query": "মজুদ অবস্থা চেক করো", "expectedIntent": "query", "expectedEntities": {}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 73, "query": "sold 4kg rice to customer on credit", "expectedIntent": "create_sale", "expectedEntities": {"quantity": 4, "itemName": "rice", "paymentMethod": "credit"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 74, "query": "কাস্টমারকে ৪ কেজি চাল বাকিতে বিক্রি করলাম", "expectedIntent": "create_sale", "expectedEntities": {"quantity": 4, "paymentMethod": "credit"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 75, "query": "outstanding receivables", "expectedIntent": "query", "expectedEntities": {}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 76, "query": "বকেয়া পাওনা", "expectedIntent": "query", "expectedEntities": {}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 77, "query": "expense ৳200 for tea", "expectedIntent": "create_expense", "expectedEntities": {"amount": 200, "description": "tea"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 78, "query": "চায়ের জন্য ২০০ টাকা খরচ", "expectedIntent": "create_expense", "expectedEntities": {"amount": 200, "description": "চা"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 79, "query": "payment received via card", "expectedIntent": "create_payment", "expectedEntities": {"paymentMethod": "card"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 80, "query": "কার্ডে পেমেন্ট পেয়েছি", "expectedIntent": "create_payment", "expectedEntities": {"paymentMethod": "card"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 81, "query": "sold 2kg dal to Rahim via Nagad", "expectedIntent": "create_sale", "expectedEntities": {"quantity": 2, "itemName": "dal", "partyName": "Rahim", "paymentMethod": "mobile_banking"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 82, "query": "রহিমকে নগদে ২ কেজি ডাল বিক্রি করলাম", "expectedIntent": "create_sale", "expectedEntities": {"quantity": 2, "partyName": "রহিম"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 83, "query": "what are my total expenses?", "expectedIntent": "query", "expectedEntities": {}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 84, "query": "মোট খরচ কত?", "expectedIntent": "query", "expectedEntities": {}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 85, "query": "record sale of 3 bottles oil", "expectedIntent": "create_sale", "expectedEntities": {"quantity": 3, "itemName": "oil"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 86, "query": "৩ বোতল তেল বিক্রি করলাম", "expectedIntent": "create_sale", "expectedEntities": {"quantity": 3}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 87, "query": "payable to suppliers", "expectedIntent": "query", "expectedEntities": {}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 88, "query": "সাপ্লায়ারদের দেনা", "expectedIntent": "query", "expectedEntities": {}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 89, "query": "sold 5 eggs to buyer", "expectedIntent": "create_sale", "expectedEntities": {"quantity": 5, "itemName": "eggs"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 90, "query": "৫টা ডিম বিক্রি করলাম", "expectedIntent": "create_sale", "expectedEntities": {"quantity": 5}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 91, "query": "expense for salary ৳10000", "expectedIntent": "create_expense", "expectedEntities": {"amount": 10000, "description": "salary"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 92, "query": "বেতন খরচ ১০০০০ টাকা", "expectedIntent": "create_expense", "expectedEntities": {"amount": 10000, "description": "বেতন"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 93, "query": "received ৳800 via Rocket", "expectedIntent": "create_payment", "expectedEntities": {"amount": 800, "paymentMethod": "mobile_banking"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 94, "query": "রকেটে ৮০০ টাকা পেয়েছি", "expectedIntent": "create_payment", "expectedEntities": {"amount": 800, "paymentMethod": "mobile_banking"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 95, "query": "sales report from 01/01/2024 to 31/01/2024", "expectedIntent": "query", "expectedEntities": {"period": "custom", "startDate": "2024-01-01", "endDate": "2024-01-31"}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 96, "query": "০১/০১/২০২৪ থেকে ৩১/০১/২০২৪ পর্যন্ত বিক্রি রিপোর্ট", "expectedIntent": "query", "expectedEntities": {"period": "custom"}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 97, "query": "sold 1 pack biscuits to walk-in customer", "expectedIntent": "create_sale", "expectedEntities": {"quantity": 1, "itemName": "biscuits"}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 98, "query": "১ প্যাকেট বিস্কুট বিক্রি করলাম", "expectedIntent": "create_sale", "expectedEntities": {"quantity": 1}, "requiresTool": true, "requiresConfirmation": true}
+{"id": 99, "query": "total stock value", "expectedIntent": "query", "expectedEntities": {}, "requiresTool": true, "requiresConfirmation": false}
+{"id": 100, "query": "মোট স্টক মূল্য", "expectedIntent": "query", "expectedEntities": {}, "requiresTool": true, "requiresConfirmation": false}

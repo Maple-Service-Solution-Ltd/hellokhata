@@ -1,0 +1,10 @@
+// Hello Khata OS - Logout API
+
+import { NextResponse } from 'next/server';
+
+export async function POST() {
+  return NextResponse.json({
+    success: true,
+    data: { message: 'Logged out successfully' },
+  });
+}
