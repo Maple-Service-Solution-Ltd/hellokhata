@@ -14,6 +14,11 @@ export const getSingleItem = async(id:string) =>{
     const res = await client.get(`/api/items/${id}`);
     return res.data
 }
+
+export const updateItem = async (item:any) =>{
+    const res = await client.patch(`/api/items/${item.id}`,item.data);
+    return res.data
+}
 export const deleteItem = async(id:string) =>{
     const res = await client.delete(`/api/items/${id}`);
     return res.data

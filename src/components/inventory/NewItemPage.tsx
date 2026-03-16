@@ -55,7 +55,7 @@ const initialForm = {
     sku: '',
     barcode: '',
     description: '',
-    unit: 'পিস',
+    unit: 'pcs',
     costPrice: '',
     sellingPrice: '',
     wholesalePrice: '',
@@ -284,12 +284,13 @@ export default function NewItemPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="পিস">{isBangla ? 'পিস' : 'Piece'}</SelectItem>
-                      <SelectItem value="কেজি">{isBangla ? 'কেজি' : 'Kg'}</SelectItem>
-                      <SelectItem value="লিটার">{isBangla ? 'লিটার' : 'Liter'}</SelectItem>
-                      <SelectItem value="গ্রাম">{isBangla ? 'গ্রাম' : 'Gram'}</SelectItem>
-                      <SelectItem value="প্যাকেট">{isBangla ? 'প্যাকেট' : 'Packet'}</SelectItem>
-                      <SelectItem value="বক্স">{isBangla ? 'বক্স' : 'Box'}</SelectItem>
+                   <SelectItem value="pcs">{isBangla ? 'পিস' : 'Pieces (pcs)'}</SelectItem>
+                    <SelectItem value="kg">{isBangla ? 'কেজি' : 'Kilogram (kg)'}</SelectItem>
+                    <SelectItem value="g">{isBangla ? 'গ্রাম' : 'Gram (g)'}</SelectItem>
+                    <SelectItem value="l">{isBangla ? 'লিটার' : 'Liter (l)'}</SelectItem>
+                    <SelectItem value="ml">{isBangla ? 'মিলি' : 'Milliliter (ml)'}</SelectItem>
+                    <SelectItem value="box">{isBangla ? 'বক্স' : 'Box'}</SelectItem>
+                    <SelectItem value="pack">{isBangla ? 'প্যাক' : 'Pack'}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

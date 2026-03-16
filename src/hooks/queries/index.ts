@@ -284,7 +284,7 @@ export function useCategories() {
     queryKey: queryKeys.categories,
     queryFn: () => apiFunctions.getCategories(),
     select: (data) => data.data,
-    staleTime: 300000, // 5 minutes
+    staleTime: 300000, 
   });
 }
 

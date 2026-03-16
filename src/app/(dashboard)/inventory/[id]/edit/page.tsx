@@ -29,10 +29,7 @@ import {
   AlertTriangle,
   Loader2,
 } from 'lucide-react';
-import { useItem, useCategories, useCreateItem } from '@/hooks/queries';
-import { useCurrency } from '@/hooks/useAppTranslation';
 import { useAppTranslation } from '@/hooks/useAppTranslation';
-import { useToast } from '@/hooks/use-toast';
 import { useSessionStore } from '@/stores/sessionStore';
 import { cn } from '@/lib/utils';
 import {
@@ -46,7 +43,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { useGetSingleItem } from '@/hooks/api/useItems';
+import { useGetItemsCategories, useGetSingleItem, useUpdateItem } from '@/hooks/api/useItems';
+import { dataTagErrorSymbol } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 interface EditItemPageProps {
   params: Promise<{ id: string }>;
@@ -56,19 +55,15 @@ export default function EditItemPage({ params }: EditItemPageProps) {
   const { id } = use(params);
   const router = useRouter();
   const { t, isBangla } = useAppTranslation();
-  const { formatCurrency } = useCurrency();
-  const { toast } = useToast();
   const businessId = useSessionStore((s) => s.business?.id);
 
-  const { data: item, isLoading: itemLoading } = useGetSingleItem(id);
-   console.log('item',item)
-  const { data: categories } = useCategories();
-  const createItem = useCreateItem();
-
-  const [isSaving, setIsSaving] = useState(false);
+  const { data, isLoading: itemLoading } = useGetSingleItem(id);
+  const item = data?.data
+  const { data: categoriesData } = useGetItemsCategories();
+  const categories = categoriesData?.data || [];
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-
+  const updateItem = useUpdateItem()
   // Form state
   const [formData, setFormData] = useState({
     name: '',
@@ -77,7 +72,7 @@ export default function EditItemPage({ params }: EditItemPageProps) {
     barcode: '',
     description: '',
     categoryId: '',
-    unit: 'pcs',
+    unit: '',
     costPrice: 0,
     sellingPrice: 0,
     wholesalePrice: 0,
@@ -116,47 +111,21 @@ export default function EditItemPage({ params }: EditItemPageProps) {
     ? ((formData.sellingPrice - formData.costPrice) / formData.costPrice * 100)
     : 0;
 
-  const handleSave = async () => {
-    if (!formData.name.trim()) {
-      toast({
-        title: isBangla ? 'নাম প্রয়োজন' : 'Name required',
-        description: isBangla ? 'পণ্যের নাম দিন' : 'Please enter item name',
-        variant: 'destructive',
-      });
+  const handleSave =  () => {
+    console.log(formData)
+    if (!formData.name || !formData.sku || !formData.categoryId || !formData.costPrice || !formData.sellingPrice || !formData.barcode || !formData.unit) {
+      toast.error(isBangla ? 'দয়া করে সমস্ত প্রয়োজনীয় ক্ষেত্র পূরণ করুন।' : 'Please fill in all required fields.')
       return;
-    }
+    }  
 
-    setIsSaving(true);
-    try {
-      const response = await fetch(`/api/items/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-business-id': businessId || '',
-        },
-        body: JSON.stringify(formData),
-      });
+    updateItem.mutate({id:item.id,data:formData},{
+      onSuccess: (data) => {
+        if(data.success){
+        toast.success(isBangla ?'সফলভাবে আপডেট করা হয়েছে': 'updated successfully')
 
-      const data = await response.json();
-
-      if (data.success) {
-        toast({
-          title: isBangla ? 'সফল হয়েছে' : 'Success',
-          description: isBangla ? 'পণ্য আপডেট হয়েছে' : 'Item updated successfully',
-        });
-        router.push('/inventory');
-      } else {
-        throw new Error(data.error?.message || 'Failed to update item');
+        }
       }
-    } catch (error) {
-      toast({
-        title: isBangla ? 'সমস্যা হয়েছে' : 'Error',
-        description: isBangla ? 'পণ্য আপডেট ব্যর্থ' : 'Failed to update item',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSaving(false);
-    }
+    })
   };
 
   const handleDelete = async () => {
@@ -172,20 +141,20 @@ export default function EditItemPage({ params }: EditItemPageProps) {
       const data = await response.json();
 
       if (data.success) {
-        toast({
-          title: isBangla ? 'সফল হয়েছে' : 'Success',
-          description: isBangla ? 'পণ্য মুছে ফেলা হয়েছে' : 'Item deleted successfully',
-        });
+        // toast({
+        //   title: isBangla ? 'সফল হয়েছে' : 'Success',
+        //   description: isBangla ? 'পণ্য মুছে ফেলা হয়েছে' : 'Item deleted successfully',
+        // });
         router.push('/inventory');
       } else {
         throw new Error(data.error?.message || 'Failed to delete item');
       }
     } catch (error) {
-      toast({
-        title: isBangla ? 'সমস্যা হয়েছে' : 'Error',
-        description: isBangla ? 'পণ্য মুছতে ব্যর্থ' : 'Failed to delete item',
-        variant: 'destructive',
-      });
+      // toast({
+      //   title: isBangla ? 'সমস্যা হয়েছে' : 'Error',
+      //   description: isBangla ? 'পণ্য মুছতে ব্যর্থ' : 'Failed to delete item',
+      //   variant: 'destructive',
+      // });
     } finally {
       setIsDeleting(false);
       setShowDeleteDialog(false);
@@ -484,8 +453,8 @@ export default function EditItemPage({ params }: EditItemPageProps) {
                 <Label>{isBangla ? 'বর্তমান স্টক' : 'Current Stock'}</Label>
                 <Input
                   type="number"
-                  value={formData.currentStock}
-                  onChange={(e) => setFormData({ ...formData, currentStock: parseInt(e.target.value) || 0 })}
+                  value={formData.currentStock || ''}
+                  onChange={(e) => setFormData({ ...formData, currentStock: parseFloat(e.target.value) || 0 })}
                   className="font-mono"
                 />
               </div>
@@ -493,8 +462,8 @@ export default function EditItemPage({ params }: EditItemPageProps) {
                 <Label>{isBangla ? 'ন্যূনতম স্টক' : 'Min Stock Level'}</Label>
                 <Input
                   type="number"
-                  value={formData.minStock}
-                  onChange={(e) => setFormData({ ...formData, minStock: parseInt(e.target.value) || 0 })}
+                  value={formData.minStock || ''}
+                  onChange={(e) => setFormData({ ...formData, minStock: parseFloat(e.target.value) || 0 })}
                   className="font-mono"
                 />
               </div>
@@ -502,8 +471,8 @@ export default function EditItemPage({ params }: EditItemPageProps) {
                 <Label>{isBangla ? 'সর্বোচ্চ স্টক' : 'Max Stock Level'}</Label>
                 <Input
                   type="number"
-                  value={formData.maxStock}
-                  onChange={(e) => setFormData({ ...formData, maxStock: parseInt(e.target.value) || 0 })}
+                  value={formData.maxStock || ''}
+                  onChange={(e) => setFormData({ ...formData, maxStock: parseFloat(e.target.value) || 0 })}
                   className="font-mono"
                 />
               </div>
@@ -527,12 +496,12 @@ export default function EditItemPage({ params }: EditItemPageProps) {
             <ArrowLeft className="h-4 w-4 mr-2" />
             {isBangla ? 'ফিরে যান' : 'Go Back'}
           </Button>
-          <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving ? (
+          <Button onClick={handleSave}>
+            {/* {isSaving ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
             ) : (
               <Save className="h-4 w-4 mr-2" />
-            )}
+            )} */}
             {isBangla ? 'সংরক্ষণ করুন' : 'Save Changes'}
           </Button>
         </div>

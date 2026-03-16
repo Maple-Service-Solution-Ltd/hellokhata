@@ -1,4 +1,4 @@
-import { createItem, deleteItem, getItems, getItemsCategories, getSingleItem } from "@/services/item.services"
+import { createItem, deleteItem, getItems, getItemsCategories, getSingleItem, updateItem } from "@/services/item.services"
 import { useMutation, useQuery } from "@tanstack/react-query"
 
 export const useCreateItem = () =>{
@@ -14,11 +14,10 @@ export const useGetItems = () =>{
     })
 }
 export function useGetSingleItem(id: string) {
+
   return useQuery({
     queryKey: ['item'],
-    queryFn: () => getSingleItem,
-    // select: (data) => data.data,
-    // enabled: !!id,
+    queryFn: ()=> getSingleItem(id),
   });
 }
 
@@ -29,6 +28,11 @@ export const useGetItemsCategories = () =>{
     })
 }
 
+export const useUpdateItem = () =>{
+    return useMutation({
+        mutationFn: updateItem
+    })
+}
 export const useDeleteItem = () =>{
     return useMutation({
         mutationFn: deleteItem
