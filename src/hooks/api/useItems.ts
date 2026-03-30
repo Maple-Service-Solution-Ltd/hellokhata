@@ -1,4 +1,4 @@
-import { createItem, deleteItem, getItems, getItemsCategories, getSingleItem, updateItem } from "@/services/item.services"
+import { createItem, deleteItem, getItems, getItemsCategories, getSingleItem, transferItem, updateItem } from "@/services/item.services"
 import { useMutation, useQuery } from "@tanstack/react-query"
 
 export const useCreateItem = () =>{
@@ -36,5 +36,12 @@ export const useUpdateItem = () =>{
 export const useDeleteItem = () =>{
     return useMutation({
         mutationFn: deleteItem
+    })
+}
+
+
+export const useTransferItem = ()=>{
+    return useMutation({
+        mutationFn: transferItem
     })
 }

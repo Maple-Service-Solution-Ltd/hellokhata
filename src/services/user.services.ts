@@ -7,6 +7,7 @@ export const registerUser = async (user:any) =>{
 
 export const verifyOTP = async(payload:any) =>{
     const res = await client.post('/api/auth/verify-otp',payload);
+    console.log(res.data)
     return res.data
 }
 

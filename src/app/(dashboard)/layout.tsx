@@ -9,6 +9,7 @@ import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 import { LoginPage } from '@/components/auth/LoginPage';
 import client from '@/lib/axios';
+import { useRouter } from 'next/navigation';
 
 // Simple store subscription for hydration
 const emptySubscribe = () => () => {};
@@ -28,7 +29,8 @@ const DashboardLayout  = ({children})=> {
      const isAuthenticated = useSessionStore((state) => state.isAuthenticated);
      const toggleAiDrawer = useUiStore((state) => state.toggleAiDrawer);
      const currentPage = useUiStore((state) => state.currentPage);
-   
+     
+     const router = useRouter()
      // Listen for command palette open event
      useEffect(() => {
        const handleOpenCommandPalette = () => setCommandPaletteOpen(true);
@@ -63,7 +65,7 @@ const DashboardLayout  = ({children})=> {
 //      useEffect(()=>{
 //      client.get('https://voiceerp.mapleitfirm.com/api/auth/status')
 //      .then(res => console.log(res))
-      
+//       .then(data => console.log(data))
 // },[])
      // Loading state - show while hydrating
      if (!mounted) {
@@ -87,9 +89,9 @@ const DashboardLayout  = ({children})=> {
      }
    
      // Show login page if not authenticated
-    //  if (!isAuthenticated) {
-    //    return <LoginPage onSuccess={() => {}} />;
-    //  }
+     if (!isAuthenticated) {
+       return router.push('/login')
+     }
    
   return (
     <>

@@ -70,7 +70,7 @@ export default function NewPartyPage() {
           {/* Back Button */}
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-1 mb-4 text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-1 mb-4 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           >
             <ArrowLeft className="h-4 w-4" />
             <span className="text-sm">{isBangla ? 'পেছনে' : 'Back'}</span>

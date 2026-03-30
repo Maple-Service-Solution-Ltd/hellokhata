@@ -52,6 +52,7 @@ export default function PartiesPage() {
 
   const { data: parties = [], isLoading } = useParties();
 
+  const router = useRouter()
   // Filter parties
   const filteredParties = parties.filter((party) => {
     const matchesSearch = party.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -75,7 +76,7 @@ export default function PartiesPage() {
           icon={Users}
           action={{
             label: t('parties.addParty'),
-            onClick: () => window.location.href = '/parties/new',
+            onClick: () => router.push('/parties/new'),
             icon: Plus,
           }}
         />
@@ -180,7 +181,7 @@ export default function PartiesPage() {
                 description={isBangla ? 'নতুন পার্টি যোগ করুন' : 'Add your first party'}
                 action={{
                   label: t('parties.addParty'),
-                  onClick: () => window.location.href = '/parties/new',
+                  onClick: () => router.push('/parties/new'),
                   icon: Plus,
                 }}
               />
@@ -418,4 +419,5 @@ function PartyCard({ party, onView }: { party: Party; onView: () => void }) {
 }
 
 // Import Edit icon
-import { Edit } from 'lucide-react';
+import { Edit } from 'lucide-react';import { useRouter } from 'next/navigation';
+

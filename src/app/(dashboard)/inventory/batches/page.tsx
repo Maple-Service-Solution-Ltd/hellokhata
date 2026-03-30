@@ -24,6 +24,7 @@ import { useAppTranslation } from '@/hooks/useAppTranslation';
 import { useNavigation } from '@/stores/uiStore';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 
 interface Batch {
   id: string;
@@ -46,8 +47,6 @@ interface Batch {
 
 export default function BatchesPage() {
   const { t, isBangla } = useAppTranslation();
-  const { navigateTo } = useNavigation();
-  
   const [batches, setBatches] = useState<Batch[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -60,10 +59,15 @@ export default function BatchesPage() {
     expiredValue: number;
   } | null>(null);
 
+
+  const router = useRouter();
+
+
   useEffect(() => {
     fetchBatches();
     fetchExpiryAlerts();
   }, [filter]);
+
 
   const fetchBatches = async () => {
     setLoading(true);
@@ -164,7 +168,7 @@ export default function BatchesPage() {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => navigateTo('inventory')}
+                onClick={() => router.push('/inventory')}
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
@@ -181,7 +185,7 @@ export default function BatchesPage() {
               </div>
             </div>
             
-            <Button onClick={() => navigateTo('inventory-new')}>
+            <Button onClick={() => router.push('new')}>
               <Plus className="h-4 w-4 mr-2" />
               {isBangla ? 'নতুন ব্যাচ' : 'Add Batch'}
             </Button>

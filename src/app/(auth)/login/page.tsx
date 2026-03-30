@@ -42,10 +42,8 @@ export default function LoginPage() {
         if (data.success) {
           toast.success(data.message);
           // Assuming data contains session info, if not, handle session logic here
-          if(data.session) {
-             setSession(data.session);
-          }
-          handleSuccess();
+          setSession(data.session);
+          // handleSuccess();
         }
       }
     });

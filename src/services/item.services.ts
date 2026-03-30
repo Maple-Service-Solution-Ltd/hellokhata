@@ -27,3 +27,8 @@ export const getItemsCategories = async() =>{
     const res = await client.get('/api/items/categories');
     return res.data
 }
+
+export const transferItem = async(item:any) =>{
+    const res = await client.post('/api/items/transfer',item);
+    return res.data
+}
