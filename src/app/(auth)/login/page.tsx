@@ -13,7 +13,7 @@ import Link from 'next/link';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { setSession } = useSessionStore();
+  const { setSessionFromAuthResponse } = useSessionStore();
   
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [phone, setPhone] = useState('');
@@ -26,11 +26,6 @@ export default function LoginPage() {
   const loginUser = useLoginUser();
   const resendOTP = useResendOTP();
 
-  const handleSuccess = () => {
-    // Redirect to home or dashboard after login
-    router.push('/');
-  };
-
   const handleVerifyOtp = () => {
     if (!otp || otp.length !== 6) {
       toast.error('Invalid OTP', { description: 'Please enter the 6-digit OTP' });
@@ -41,9 +36,8 @@ export default function LoginPage() {
       onSuccess: (data) => {
         if (data.success) {
           toast.success(data.message);
-          // Assuming data contains session info, if not, handle session logic here
-          setSession(data.session);
-          // handleSuccess();
+         setSessionFromAuthResponse(data);
+          router.push('/dashboard');
         }
       }
     });

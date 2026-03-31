@@ -10,6 +10,7 @@ import { api } from '@/lib/api-client';
 import { toast } from 'sonner';
 import type { Session } from '@/types';
 import { useLoginUser, useRegisterUser, useResendOTP, useVerifyOTP } from '@/hooks/api/useUser';
+import { useRouter } from 'next/router';
 
 type Step = 'phone' | 'otp' | 'register';
 
@@ -18,7 +19,7 @@ interface LoginPageProps {
 }
 
 export function LoginPage({ onSuccess }: LoginPageProps) {
-  const { setSession } = useSessionStore();
+  const { setSessionFromAuthResponse } = useSessionStore();
   const [step, setStep] = useState<Step>('phone');
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [phone, setPhone] = useState('');
@@ -37,7 +38,9 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
   const verifyOTP = useVerifyOTP();
   const loginUser  = useLoginUser();
   const resendOTP = useResendOTP()
-  
+
+  //  react hooks
+  const router = useRouter();
   // verify otp
   const handleVerifyOtp =  () => {
     if (!otp || otp.length !== 6) {
@@ -51,6 +54,8 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
       onSuccess:(data) => {
         if(data.success){
           toast.success(data.message);
+          // setSessionFromAuthResponse(data);
+          router.push('/');
         }
       }
     })

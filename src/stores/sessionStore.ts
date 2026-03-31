@@ -3,20 +3,93 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { User, Business, PlanType, FeatureFlags, Session } from '@/types';
+
+// ─── Domain Types ─────────────────────────────────────────────────────────────
+
+export type UserRole = 'owner' | 'manager' | 'staff';
+
+export type PlanType = 'free' | 'starter' | 'growth' | 'intelligence';
+
+export interface User {
+  id: string;
+  branchId: string;
+  name: string;
+  phone: string;
+  role: UserRole;
+}
+
+export interface Business {
+  id: string;
+  name: string;
+  logo: string | null;
+  currency: string; // e.g. "BDT"
+}
+
+export interface FeatureFlags {
+  aiAssistant: boolean;
+  multiStaff: boolean;
+  advancedReports: boolean;
+  dataExport: boolean;
+  unlimitedItems: boolean;
+  unlimitedParties: boolean;
+  multiBranch: boolean;
+  creditControl: boolean;
+  auditTrail: boolean;
+  advancedPricing: boolean;
+  healthScore: boolean;
+  reconciliation: boolean;
+  staffPerformance: boolean;
+  deadStockAnalysis: boolean;
+  globalSearch: boolean;
+}
+
+// ─── Server Response Types ────────────────────────────────────────────────────
+// Matches the exact shape returned by /api/auth/verify-phone (and similar endpoints)
+
+export interface AuthResponse {
+  success: boolean;
+  message: string;
+  accessToken: string;
+  user: {
+    id: string;
+    branchId: string;
+    name: string;
+    phone: string;
+    role: UserRole;
+  };
+  business: {
+    id: string;
+    name: string;
+    logo: string | null;
+    currency: string;
+  };
+}
+
+// Shape returned by /api/auth/refresh-session
+export interface RefreshSessionResponse {
+  success: boolean;
+  data: {
+    plan: PlanType;
+    features?: FeatureFlags;
+    business?: Business;
+    user?: User;
+  };
+}
+
+// ─── Store Interface ──────────────────────────────────────────────────────────
 
 interface SessionState {
   // State
   user: User | null;
-  token: string | null;
+  token: string | null;        // mapped from server's accessToken
   business: Business | null;
-  plan: PlanType;
+  plan: PlanType;              // not returned by server — derived or fetched separately
   features: FeatureFlags;
   isAuthenticated: boolean;
   isLoading: boolean;
-  
+
   // Actions
-  setSession: (session: Session) => void;
+  setSessionFromAuthResponse: (response: AuthResponse) => void;
   updateUser: (user: Partial<User>) => void;
   updateBusiness: (business: Partial<Business>) => void;
   setPlan: (plan: PlanType) => void;
@@ -26,11 +99,12 @@ interface SessionState {
   refreshSession: () => Promise<void>;
 }
 
-// Default features based on plan
-// 🟢 FREE – ৳0: Hook tier. Limit AI to 3/day. No export. No health score. No analytics.
-// 🔵 STARTER – ৳199/month: Micro shop. AI 15/day, Export CSV, Dead stock alert
-// 🟣 GROWTH – ৳499/month: Growing SME. AI 50/day, forecasting, priority support
-// 🔴 INTELLIGENCE – ৳999/month: Serious business. Unlimited, API access, dedicated support
+// ─── Plan → Feature Flags ─────────────────────────────────────────────────────
+// 🟢 FREE        – ৳0:   Hook tier. AI 3/day, no export, no health score, no analytics.
+// 🔵 STARTER     – ৳199: Micro shop. AI 15/day, CSV export, dead stock alert.
+// 🟣 GROWTH      – ৳499: Growing SME. AI 50/day, forecasting, priority support.
+// 🔴 INTELLIGENCE– ৳999: Serious business. Unlimited AI, API access, dedicated support.
+
 const getDefaultFeatures = (plan: PlanType): FeatureFlags => {
   switch (plan) {
     case 'intelligence':
@@ -109,6 +183,8 @@ const getDefaultFeatures = (plan: PlanType): FeatureFlags => {
   }
 };
 
+// ─── Store ────────────────────────────────────────────────────────────────────
+
 export const useSessionStore = create<SessionState>()(
   persist(
     (set, get) => ({
@@ -121,14 +197,29 @@ export const useSessionStore = create<SessionState>()(
       isAuthenticated: false,
       isLoading: true,
 
-      // Actions
-      setSession: (session: Session) => {
+      // ✅ Primary action — call this right after a successful login/verify response
+      setSessionFromAuthResponse: (response: AuthResponse) => {
+        // Server doesn't return plan — keep existing plan or default to 'free'.
+        // Call refreshSession() afterward if you need the real plan from the server.
+        const currentPlan = get().plan ?? 'free';
+
         set({
-          user: session.user,
-          token: session.token,
-          business: session.business,
-          plan: session.plan,
-          features: session.features || getDefaultFeatures(session.plan),
+          token: response.accessToken,
+          user: {
+            id: response.user.id,
+            branchId: response.user.branchId,
+            name: response.user.name,
+            phone: response.user.phone,
+            role: response.user.role,
+          },
+          business: {
+            id: response.business.id,
+            name: response.business.name,
+            logo: response.business.logo,
+            currency: response.business.currency,
+          },
+          plan: currentPlan,
+          features: getDefaultFeatures(currentPlan),
           isAuthenticated: true,
           isLoading: false,
         });
@@ -136,32 +227,19 @@ export const useSessionStore = create<SessionState>()(
 
       updateUser: (userData: Partial<User>) => {
         const currentUser = get().user;
-        if (currentUser) {
-          set({
-            user: { ...currentUser, ...userData },
-          });
-        }
+        if (currentUser) set({ user: { ...currentUser, ...userData } });
       },
 
       updateBusiness: (businessData: Partial<Business>) => {
         const currentBusiness = get().business;
-        if (currentBusiness) {
-          set({
-            business: { ...currentBusiness, ...businessData },
-          });
-        }
+        if (currentBusiness) set({ business: { ...currentBusiness, ...businessData } });
       },
 
       setPlan: (plan: PlanType) => {
-        set({
-          plan,
-          features: getDefaultFeatures(plan),
-        });
+        set({ plan, features: getDefaultFeatures(plan) });
       },
 
-      setFeatures: (features: FeatureFlags) => {
-        set({ features });
-      },
+      setFeatures: (features: FeatureFlags) => set({ features }),
 
       logout: () => {
         set({
@@ -175,14 +253,13 @@ export const useSessionStore = create<SessionState>()(
         });
       },
 
-      setLoading: (loading: boolean) => {
-        set({ isLoading: loading });
-      },
+      setLoading: (loading: boolean) => set({ isLoading: loading }),
 
+      // Call this after setSessionFromAuthResponse to sync real plan & features from server
       refreshSession: async () => {
         const state = get();
         if (!state.business?.id) return;
-        
+
         try {
           const response = await fetch('/api/auth/refresh-session', {
             method: 'POST',
@@ -192,15 +269,15 @@ export const useSessionStore = create<SessionState>()(
               'x-user-id': state.user?.id || '',
             },
           });
-          
-          const data = await response.json();
-          
+
+          const data: RefreshSessionResponse = await response.json();
+
           if (data.success && data.data) {
             set({
               plan: data.data.plan,
-              features: data.data.features,
-              business: data.data.business,
-              user: data.data.user || state.user,
+              features: data.data.features ?? getDefaultFeatures(data.data.plan),
+              business: data.data.business ?? state.business,
+              user: data.data.user ?? state.user,
             });
           }
         } catch (error) {
@@ -220,22 +297,20 @@ export const useSessionStore = create<SessionState>()(
         isAuthenticated: state.isAuthenticated,
       }),
       onRehydrateStorage: () => (state) => {
-        // Always set isLoading to false after rehydration completes
-        if (state) {
-          state.isLoading = false;
-        }
+        if (state) state.isLoading = false;
       },
     }
   )
 );
 
-// Helper hooks
-export const useUser = () => useSessionStore((state) => state.user);
-export const useBusiness = () => useSessionStore((state) => state.business);
-export const usePlan = () => useSessionStore((state) => state.plan);
-export const useFeatures = () => useSessionStore((state) => state.features);
-export const useIsAuthenticated = () => useSessionStore((state) => state.isAuthenticated);
-export const useIsOwner = () => useSessionStore((state) => state.user?.role === 'owner');
-export const useIsManager = () => useSessionStore((state) => 
-  state.user?.role === 'owner' || state.user?.role === 'manager'
+// ─── Helper Hooks ─────────────────────────────────────────────────────────────
+
+export const useUser            = () => useSessionStore((s) => s.user);
+export const useBusiness        = () => useSessionStore((s) => s.business);
+export const usePlan            = () => useSessionStore((s) => s.plan);
+export const useFeatures        = () => useSessionStore((s) => s.features);
+export const useIsAuthenticated = () => useSessionStore((s) => s.isAuthenticated);
+export const useIsOwner         = () => useSessionStore((s) => s.user?.role === 'owner');
+export const useIsManager       = () => useSessionStore((s) =>
+  s.user?.role === 'owner' || s.user?.role === 'manager'
 );

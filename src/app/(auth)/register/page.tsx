@@ -13,7 +13,7 @@ import Link from 'next/link';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { setSession } = useSessionStore();
+  const { setSessionFromAuthResponse } = useSessionStore();
 
   const [step, setStep] = useState<'register' | 'otp'>('register');
   const [phone, setPhone] = useState('');
@@ -45,11 +45,10 @@ export default function RegisterPage() {
       onSuccess: (data) => {
         if (data.success) {
           toast.success(data.message);
-          if (data.session) {
-            setSession(data.session);
+  
+            setSessionFromAuthResponse(data);
+            router.push('/');
           }
-          handleSuccess();
-        }
       }
     });
   };
