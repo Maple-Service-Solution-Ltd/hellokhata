@@ -28,21 +28,20 @@ import {
   Mail,
   MapPin,
   AlertTriangle,
-  Eye,
   MessageCircle,
   MoreVertical,
   DollarSign,
   Calendar,
   CreditCard,
   FileText,
+  Trash2,
+  Loader2,
 } from 'lucide-react';
-import { useParties } from '@/hooks/queries';
 import { useCurrency, useDateFormat } from '@/hooks/useAppTranslation';
 import { useAppTranslation } from '@/hooks/useAppTranslation';
 import { cn } from '@/lib/utils';
 import { DetailModal, DetailRow, DetailSection } from '@/components/shared/DetailModal';
 import type { Party } from '@/types';
-
 export default function PartiesPage() {
   const { t, isBangla } = useAppTranslation();
   const { formatCurrency } = useCurrency();
@@ -51,26 +50,22 @@ export default function PartiesPage() {
   const [selectedParty, setSelectedParty] = useState<Party | null>(null);
 
   const { data: parties = [], isLoading } = useParties();
+  console.log('Fetched parties:', parties);
 
   const router = useRouter()
   // Filter parties
-  const filteredParties = parties.filter((party) => {
+  const filteredParties = parties?.data?.filter((party) => {
     const matchesSearch = party.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       party.phone?.includes(searchTerm);
     const matchesType = typeFilter === 'all' || party.type === typeFilter || party.type === 'both';
     return matchesSearch && matchesType;
   });
 
-  // Separate customers and suppliers for stats
-  const customers = parties.filter((p) => p.type === 'customer' || p.type === 'both');
-  const suppliers = parties.filter((p) => p.type === 'supplier' || p.type === 'both');
-  const totalReceivable = parties.reduce((sum, p) => sum + (p.currentBalance > 0 ? p.currentBalance : 0), 0);
-  const totalPayable = parties.reduce((sum, p) => sum + (p.currentBalance < 0 ? Math.abs(p.currentBalance) : 0), 0);
 
   return (
     <>
-    <div className="space-y-6">
-      <PageHeader
+      <div className="space-y-6">
+        <PageHeader
           title={t('parties.title')}
           subtitle={isBangla ? 'গ্রাহক ও সরবরাহকারী ব্যবস্থাপনা' : 'Customer & supplier management'}
           icon={Users}
@@ -90,7 +85,7 @@ export default function PartiesPage() {
                   <User className="h-5 w-5 text-blue-600" />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-2xl font-bold text-gray-900 dark:text-white">{customers.length}</div>
+                  <div className="text-2xl font-bold text-gray-900 dark:text-white">{parties?.summary?.customers}</div>
                   <p className="text-sm text-gray-500 truncate">{t('parties.customers')}</p>
                 </div>
               </div>
@@ -103,7 +98,7 @@ export default function PartiesPage() {
                   <Building2 className="h-5 w-5 text-purple-600" />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-2xl font-bold text-gray-900 dark:text-white">{suppliers.length}</div>
+                  <div className="text-2xl font-bold text-gray-900 dark:text-white">{parties?.summary?.suppliers}</div>
                   <p className="text-sm text-gray-500 truncate">{t('parties.suppliers')}</p>
                 </div>
               </div>
@@ -116,7 +111,7 @@ export default function PartiesPage() {
                   <Users className="h-5 w-5 text-emerald-600" />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-xl font-bold text-emerald-600 truncate">{formatCurrency(totalReceivable)}</div>
+                  <div className="text-xl font-bold text-emerald-600 truncate">{formatCurrency(parties?.summary?.totalReceivable)}</div>
                   <p className="text-sm text-gray-500 truncate">{t('dashboard.receivable')}</p>
                 </div>
               </div>
@@ -129,7 +124,7 @@ export default function PartiesPage() {
                   <Users className="h-5 w-5 text-red-600" />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-xl font-bold text-red-600 truncate">{formatCurrency(totalPayable)}</div>
+                  <div className="text-xl font-bold text-red-600 truncate">{formatCurrency(parties?.summary?.totalPayable)}</div>
                   <p className="text-sm text-gray-500 truncate">{t('dashboard.payable')}</p>
                 </div>
               </div>
@@ -188,10 +183,10 @@ export default function PartiesPage() {
             ) : (
               <ScrollArea className="h-[500px] pr-4">
                 <div className="space-y-3">
-                  {filteredParties.map((party) => (
-                    <PartyCard 
-                      key={party.id} 
-                      party={party} 
+                  {filteredParties.map((party: any) => (
+                    <PartyCard
+                      key={party.id}
+                      party={party}
                       onView={() => setSelectedParty(party)}
                     />
                   ))}
@@ -207,11 +202,11 @@ export default function PartiesPage() {
         isOpen={!!selectedParty}
         onClose={() => setSelectedParty(null)}
         title={selectedParty?.name || ''}
-        subtitle={selectedParty?.type === 'customer' 
+        subtitle={selectedParty?.type === 'customer'
           ? (isBangla ? 'গ্রাহক' : 'Customer')
           : selectedParty?.type === 'supplier'
-          ? (isBangla ? 'সরবরাহকারী' : 'Supplier')
-          : (isBangla ? 'উভয়' : 'Both')
+            ? (isBangla ? 'সরবরাহকারী' : 'Supplier')
+            : (isBangla ? 'উভয়' : 'Both')
         }
         width="lg"
       >
@@ -247,8 +242,8 @@ export default function PartiesPage() {
                 value={
                   <span className={cn(
                     'font-bold',
-                    selectedParty.currentBalance > 0 ? 'text-emerald-600' : 
-                    selectedParty.currentBalance < 0 ? 'text-red-600' : 'text-gray-900'
+                    selectedParty.currentBalance > 0 ? 'text-emerald-600' :
+                      selectedParty.currentBalance < 0 ? 'text-red-600' : 'text-gray-900'
                   )}>
                     {formatCurrency(selectedParty.currentBalance)}
                   </span>
@@ -283,16 +278,14 @@ export default function PartiesPage() {
 
             {/* Actions */}
             <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-800">
-              <Button 
+              <Button
                 className="flex-1"
-                onClick={() => {
-                  window.location.href = `/parties/${selectedParty.id}/edit`;
-                }}
+                onClick={() => router.push(`/parties/${selectedParty.id}/edit`)}
               >
                 <Edit className="h-4 w-4 mr-2" />
                 {isBangla ? 'সম্পাদনা' : 'Edit'}
               </Button>
-              <Button 
+              <Button
                 variant="outline"
                 className="flex-1"
                 onClick={() => {
@@ -308,7 +301,7 @@ export default function PartiesPage() {
             </div>
           </>
         )}
-        </DetailModal>
+      </DetailModal>
     </>
   );
 }
@@ -318,6 +311,18 @@ function PartyCard({ party, onView }: { party: Party; onView: () => void }) {
   const { isBangla } = useAppTranslation();
   const { formatCurrency } = useCurrency();
 
+  const { mutate: deleteParty, isPending: isDeleting } = useDeletePary();
+  const handleDelete = (id) => {
+    deleteParty(id, {
+      onSuccess: (data) => {
+        toast({
+          title: isBangla ? 'পার্টি মুছে ফেলা হয়েছে' : 'Party deleted successfully',
+        });
+        router.push('/parties');
+      }
+    })
+  };
+  const router = useRouter()
   const getRiskBadge = () => {
     if (!party.riskLevel || party.currentBalance <= 0) return null;
 
@@ -362,7 +367,7 @@ function PartyCard({ party, onView }: { party: Party; onView: () => void }) {
   };
 
   return (
-    <div className="flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-800 hover:border-emerald-200 dark:hover:border-emerald-800 transition-colors gap-4">
+    <div onClick={onView} className="flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-800 hover:border-emerald-200 dark:hover:border-emerald-800 transition-colors gap-4">
       <div className="flex items-center gap-4 min-w-0 flex-1">
         <div className="h-12 w-12 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
           {party.type === 'supplier' ? (
@@ -406,18 +411,23 @@ function PartyCard({ party, onView }: { party: Party; onView: () => void }) {
           </p>
         </div>
         <div className="flex gap-1 shrink-0">
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onView}>
-            <Eye className="h-4 w-4" />
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(party.id)} >
+            {isDeleting ? <Loader2 className="h-4 w-4" /> : <Trash2 className="h-4 w-4" />}
+          </Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); router.push(`/parties/${party.id}/edit`) }}>
+            <Edit className="h-4 w-4" />
           </Button>
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => party.phone && window.open(`tel:${party.phone}`)}>
             <MessageCircle className="h-4 w-4" />
           </Button>
         </div>
       </div>
-    </div>
+    </div >
   );
 }
 
 // Import Edit icon
-import { Edit } from 'lucide-react';import { useRouter } from 'next/navigation';
+import { Edit } from 'lucide-react'; import { useRouter } from 'next/navigation';
+import { useDeletePary, useParties } from '@/hooks/api/useParties';
+import { toast } from '@/hooks/use-toast';
 

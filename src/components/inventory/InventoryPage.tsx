@@ -87,8 +87,8 @@ export default function InventoryPage() {
   const [showImportModal, setShowImportModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
-  
-  const { data: itemsData, isLoading: itemsLoading ,refetch} = useGetItems();
+
+  const { data: itemsData, isLoading: itemsLoading, refetch } = useGetItems();
   const { data: categoriesData } = useGetItemsCategories();
   const router = useRouter();
 
@@ -104,12 +104,12 @@ export default function InventoryPage() {
     const matchesStock = stockFilter === 'all' ||
       (stockFilter === 'low' && item.currentStock <= item.minStock) ||
       (stockFilter === 'out' && item.currentStock === 0);
-    
+
     const matchesPrice = priceFilter === 'all' ||
       (priceFilter === 'wholesale' && item.wholesalePrice && item.wholesalePrice > 0) ||
       (priceFilter === 'vip' && item.vipPrice && item.vipPrice > 0) ||
       (priceFilter === 'multi' && (item.wholesalePrice || item.vipPrice || item.minimumPrice));
-    
+
     return matchesSearch && matchesCategory && matchesStock && matchesPrice;
   });
 
@@ -166,7 +166,7 @@ export default function InventoryPage() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            
+
             {/* Stock Actions */}
             <div className="flex items-center gap-1">
               <Button variant="outline" size="sm" onClick={() => router.push('/inventory/stock-adjustment')}>
@@ -225,7 +225,7 @@ export default function InventoryPage() {
             isBangla={isBangla}
           />
         </div>
-        
+
         {/* Multi-Price Summary */}
         {multiPriceItems > 0 && (
           <Card variant="elevated" padding="default">
@@ -238,8 +238,8 @@ export default function InventoryPage() {
                   {isBangla ? 'মাল্টি-প্রাইস পণ্য' : 'Multi-Price Items'}
                 </h3>
                 <p className="text-xs text-muted-foreground whitespace-nowrap">
-                  {isBangla 
-                    ? `${multiPriceItems}টি পণ্যে একাধিক মূল্য সেট করা আছে` 
+                  {isBangla
+                    ? `${multiPriceItems}টি পণ্যে একাধিক মূল্য সেট করা আছে`
                     : `${multiPriceItems} items have multiple price tiers`}
                 </p>
               </div>
@@ -355,13 +355,13 @@ export default function InventoryPage() {
               <ScrollArea className="h-[500px]">
                 <div className="divide-y divide-border-subtle">
                   {filteredItems.map((item, index) => (
-                    <ItemRow 
-                      key={item.id} 
-                      item={item} 
-                      isBangla={isBangla} 
+                    <ItemRow
+                      key={item.id}
+                      item={item}
+                      isBangla={isBangla}
                       index={index}
                       onView={() => setSelectedItem(item)}
-                      refetchItems={refetch} 
+                      refetchItems={refetch}
                     />
                   ))}
                 </div>
@@ -387,8 +387,8 @@ export default function InventoryPage() {
                 value={
                   <span className={cn(
                     'text-xl font-bold',
-                    selectedItem.currentStock === 0 ? 'text-red-600' : 
-                    selectedItem.currentStock <= selectedItem.minStock ? 'text-amber-600' : 'text-emerald-600'
+                    selectedItem.currentStock === 0 ? 'text-red-600' :
+                      selectedItem.currentStock <= selectedItem.minStock ? 'text-amber-600' : 'text-emerald-600'
                   )}>
                     {selectedItem.currentStock} {selectedItem.unit}
                   </span>
@@ -411,8 +411,8 @@ export default function InventoryPage() {
                   value={
                     <span className={cn(
                       'font-bold',
-                      selectedItem.margin > 20 ? 'text-emerald-600' : 
-                      selectedItem.margin > 10 ? 'text-amber-600' : 'text-red-600'
+                      selectedItem.margin > 20 ? 'text-emerald-600' :
+                        selectedItem.margin > 10 ? 'text-amber-600' : 'text-red-600'
                     )}>
                       {selectedItem.margin.toFixed(1)}%
                     </span>
@@ -451,17 +451,15 @@ export default function InventoryPage() {
 
             {/* Actions */}
             <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-800">
-              <Button 
+              <Button
                 className="flex-1"
-                onClick={() => {
-                  toast.info(isBangla ? 'সম্পাদনা ফিচার শীঘ্রই আসছে' : 'Edit feature coming soon');
-                }}
+                onClick={() => router.push(`/inventory/${selectedItem.id}/edit`)}
               >
                 <Edit className="h-4 w-4 mr-2" />
                 <span className="whitespace-nowrap">{isBangla ? 'সম্পাদনা' : 'Edit'}</span>
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="flex-1"
                 onClick={() => {
                   toast.info(isBangla ? 'স্টক ইতিহাস শীঘ্রই আসছে' : 'Stock history coming soon');
@@ -501,18 +499,18 @@ export default function InventoryPage() {
 }
 
 // Item Row Component
-function ItemRow({ 
-  item, 
-  isBangla, 
-  index, 
+function ItemRow({
+  item,
+  isBangla,
+  index,
   onView,
   refetchItems
-}: { 
-  item: Item; 
-  isBangla: boolean; 
-  index: number; 
+}: {
+  item: Item;
+  isBangla: boolean;
+  index: number;
   onView: () => void;
-refetchItems: () => void
+  refetchItems: () => void
 }) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const { formatCurrency } = useCurrency();
@@ -529,7 +527,7 @@ refetchItems: () => void
 
   const stockStatus = getStockStatus();
   const stockPercentage = Math.min((item.currentStock / (item.minStock * 3)) * 100, 100);
-  
+
   const hasWholesale = item.wholesalePrice && item.wholesalePrice > 0;
   const hasVip = item.vipPrice && item.vipPrice > 0;
   const hasMinimum = item.minimumPrice && item.minimumPrice > 0;
@@ -544,17 +542,17 @@ refetchItems: () => void
 
   const handleConfirmDelete = () => {
     // onDelete(item.id);
-    deleteItem.mutate(item.id,{
+    deleteItem.mutate(item.id, {
       onSuccess: data => {
-        if(data.success){
+        if (data.success) {
           toast.success('Item deleted successfully!');
           refetchItems()
           setDeleteOpen(false);
-          
+
         }
       }
     })
-   
+
   };
 
   // FIX 1 (cont): Stop propagation on the row click when delete dialog is open
@@ -566,49 +564,49 @@ refetchItems: () => void
   return (
     <>
       {/* Delete Confirmation — rendered outside row to prevent click bubbling */}
-   <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-  <DialogContent className="max-w-sm overflow-hidden !max-h-none">
-    <div className="flex flex-col items-center gap-3 pt-2">
-      {/* Icon */}
-      <div className="flex items-center justify-center w-12 h-12 rounded-full bg-destructive/10 shrink-0">
-        <Trash2 className="h-5 w-5 text-destructive" />
-      </div>
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent className="max-w-sm overflow-hidden !max-h-none">
+          <div className="flex flex-col items-center gap-3 pt-2">
+            {/* Icon */}
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-destructive/10 shrink-0">
+              <Trash2 className="h-5 w-5 text-destructive" />
+            </div>
 
-      {/* Text */}
-      <div className="text-center space-y-1">
-        <DialogTitle className="text-base font-semibold">
-          {isBangla ? 'পণ্য মুছে ফেলবেন?' : 'Delete this item?'}
-        </DialogTitle>
-        <DialogDescription className="text-sm text-muted-foreground">
-          {isBangla
-            ? `"${item.name}" স্থায়ীভাবে মুছে ফেলা হবে।`
-            : `"${item.name}" will be permanently deleted.`}
-        </DialogDescription>
-      </div>
+            {/* Text */}
+            <div className="text-center space-y-1">
+              <DialogTitle className="text-base font-semibold">
+                {isBangla ? 'পণ্য মুছে ফেলবেন?' : 'Delete this item?'}
+              </DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                {isBangla
+                  ? `"${item.name}" স্থায়ীভাবে মুছে ফেলা হবে।`
+                  : `"${item.name}" will be permanently deleted.`}
+              </DialogDescription>
+            </div>
 
-      {/* Buttons */}
-      <div className="flex w-full gap-2 pt-1">
-        <Button
-          variant="outline"
-          className="flex-1"
-          onClick={() => setDeleteOpen(false)}
-        >
-          {isBangla ? 'বাতিল' : 'Cancel'}
-        </Button>
-        <Button
-          variant="destructive"
-          className="flex-1"
-          onClick={handleConfirmDelete}
-        >
-          <Trash2 className="h-4 w-4 mr-2" />
-          {isBangla ? 'মুছে ফেলুন' : 'Delete'}
-        </Button>
-      </div>
-    </div>
-  </DialogContent>
-</Dialog>
+            {/* Buttons */}
+            <div className="flex w-full gap-2 pt-1">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setDeleteOpen(false)}
+              >
+                {isBangla ? 'বাতিল' : 'Cancel'}
+              </Button>
+              <Button
+                variant="destructive"
+                className="flex-1"
+                onClick={handleConfirmDelete}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                {isBangla ? 'মুছে ফেলুন' : 'Delete'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-      <div 
+      <div
         className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors cursor-pointer group stagger-item gap-4"
         style={{ animationDelay: `${index * 30}ms` }}
         onClick={handleRowClick}
@@ -642,10 +640,10 @@ refetchItems: () => void
               <span className="whitespace-nowrap">{item.unit}</span>
             </div>
             <div className="mt-2 max-w-[200px]">
-              <Progress 
-                value={stockPercentage} 
-                size="sm" 
-                color={item.currentStock === 0 ? 'destructive' : item.currentStock <= item.minStock ? 'warning' : 'emerald'} 
+              <Progress
+                value={stockPercentage}
+                size="sm"
+                color={item.currentStock === 0 ? 'destructive' : item.currentStock <= item.minStock ? 'warning' : 'emerald'}
               />
             </div>
           </div>
@@ -684,7 +682,7 @@ refetchItems: () => void
             <Button
               variant="ghost"
               size="icon-sm"
-              onClick={(e) =>{ e.stopPropagation(); router.push(`/inventory/${item.id}/edit`)}}
+              onClick={(e) => { e.stopPropagation(); router.push(`/inventory/${item.id}/edit`) }}
             >
               <Edit className="h-4 w-4" />
             </Button>

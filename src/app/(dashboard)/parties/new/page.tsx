@@ -9,16 +9,32 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Users, Check, X, User, Building2, ArrowLeft } from 'lucide-react';
-import { useCreateParty } from '@/hooks/queries';
 import { useAppTranslation } from '@/hooks/useAppTranslation';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useUser } from '@/stores';
+import { useCreateParty } from '@/hooks/api/useParties';
+
+export interface Party {
+  name: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  type: "customer" | "supplier" | 'both';
+  branchId: string;
+  openingBalance: number;
+  creditLimit?: number;
+  paymentTerms?: number;
+  notes?: string;
+}
+
 
 export default function NewPartyPage() {
   const router = useRouter();
   const { t, isBangla } = useAppTranslation();
-  const createParty = useCreateParty();
-  
+  const { mutate, isPending } = useCreateParty();
+  const user = useUser();
+
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -30,35 +46,37 @@ export default function NewPartyPage() {
     paymentTerms: '',
     notes: '',
   });
-  
+
   const updateForm = (key: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
   };
-  
+
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
       toast.error(isBangla ? 'নাম প্রয়োজন' : 'Name is required');
       return;
     }
-    
-    try {
-      await createParty.mutateAsync({
-        name: formData.name,
-        phone: formData.phone || undefined,
-        email: formData.email || undefined,
-        address: formData.address || undefined,
-        type: formData.type,
-        openingBalance: parseFloat(formData.openingBalance) || 0,
-        creditLimit: formData.creditLimit ? parseFloat(formData.creditLimit) : undefined,
-        paymentTerms: formData.paymentTerms ? parseInt(formData.paymentTerms) : undefined,
-        notes: formData.notes || undefined,
-      });
-      
-      toast.success(isBangla ? 'পার্টি তৈরি হয়েছে!' : 'Party created successfully!');
-      router.push('/parties');
-    } catch (error) {
-      toast.error(isBangla ? 'পার্টি সংরক্ষণে সমস্যা হয়েছে' : 'Failed to save party');
+
+    const partyItem: Party = {
+      name: formData.name,
+      phone: formData.phone || undefined,
+      email: formData.email || undefined,
+      address: formData.address || undefined,
+      type: formData.type,
+      branchId: user?.branchId || '',
+      openingBalance: parseFloat(formData.openingBalance) || 0,
+      creditLimit: formData.creditLimit ? parseFloat(formData.creditLimit) : undefined,
+      paymentTerms: formData.paymentTerms ? parseInt(formData.paymentTerms) : undefined,
+      notes: formData.notes || undefined,
     }
+
+    mutate(partyItem, {
+      onSuccess: () => {
+        toast.success(isBangla ? 'পার্টি তৈরি হয়েছে!' : 'Party created successfully!');
+        router.push('/parties');
+      },
+    });
+
   };
 
   return (
@@ -66,7 +84,7 @@ export default function NewPartyPage() {
       {/* Centered Page Container */}
       <div className="flex justify-center">
         <div className="w-full" style={{ maxWidth: '700px' }}>
-          
+
           {/* Back Button */}
           <button
             onClick={() => router.back()}
@@ -75,7 +93,7 @@ export default function NewPartyPage() {
             <ArrowLeft className="h-4 w-4" />
             <span className="text-sm">{isBangla ? 'পেছনে' : 'Back'}</span>
           </button>
-          
+
           {/* Page Title */}
           <div className="mb-6">
             <div className="flex items-center gap-3 mb-1">
@@ -90,7 +108,7 @@ export default function NewPartyPage() {
               {isBangla ? 'নতুন গ্রাহক বা সরবরাহকারী যোগ করুন' : 'Add a new customer or supplier'}
             </p>
           </div>
-          
+
           {/* Form Card */}
           <Card>
             <CardHeader>
@@ -98,7 +116,7 @@ export default function NewPartyPage() {
                 {isBangla ? 'পার্টির তথ্য' : 'Party Information'}
               </CardTitle>
             </CardHeader>
-            
+
             <CardContent className="space-y-5">
               {/* Party Type */}
               <div>
@@ -128,7 +146,7 @@ export default function NewPartyPage() {
                   ))}
                 </div>
               </div>
-              
+
               {/* Name */}
               <div>
                 <Label className="mb-2 block">
@@ -141,7 +159,7 @@ export default function NewPartyPage() {
                   className="h-11"
                 />
               </div>
-              
+
               {/* Phone & Email */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -168,7 +186,7 @@ export default function NewPartyPage() {
                   />
                 </div>
               </div>
-              
+
               {/* Address */}
               <div>
                 <Label className="mb-2 block">
@@ -181,7 +199,7 @@ export default function NewPartyPage() {
                   className="h-11"
                 />
               </div>
-              
+
               {/* Opening Balance */}
               <div>
                 <Label className="mb-2 block">
@@ -198,7 +216,7 @@ export default function NewPartyPage() {
                   {isBangla ? 'পাওনা থাকলে ধনাত্মক, দেনা থাকলে ঋণাত্মক' : 'Positive for receivable, negative for payable'}
                 </p>
               </div>
-              
+
               {/* Credit Settings (for customers) */}
               {(formData.type === 'customer' || formData.type === 'both') && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-lg bg-muted/30 border">
@@ -228,7 +246,7 @@ export default function NewPartyPage() {
                   </div>
                 </div>
               )}
-              
+
               {/* Notes */}
               <div>
                 <Label className="mb-2 block">
@@ -242,14 +260,14 @@ export default function NewPartyPage() {
                 />
               </div>
             </CardContent>
-            
+
             <CardFooter className="flex gap-3">
               <Button
                 className="flex-1 h-11"
                 onClick={handleSubmit}
-                disabled={createParty.isPending}
+                disabled={isPending}
               >
-                {createParty.isPending ? (
+                {isPending ? (
                   <span className="flex items-center gap-2">
                     <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
                     {isBangla ? 'সংরক্ষণ হচ্ছে...' : 'Saving...'}

@@ -14,7 +14,7 @@ import Link from 'next/link';
 export default function LoginPage() {
   const router = useRouter();
   const { setSessionFromAuthResponse } = useSessionStore();
-  
+
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
@@ -36,8 +36,8 @@ export default function LoginPage() {
       onSuccess: (data) => {
         if (data.success) {
           toast.success(data.message);
-         setSessionFromAuthResponse(data);
-          router.push('/dashboard');
+          setSessionFromAuthResponse(data);
+          router.push('/');
         }
       }
     });
@@ -69,7 +69,7 @@ export default function LoginPage() {
           setDemoOTP(data.code);
           setOtp('');
           toast.success('OTP Sent!');
-          
+
           // Start Countdown
           setCountdown(60);
           const timer = setInterval(() => {
@@ -122,7 +122,7 @@ export default function LoginPage() {
         </div>
 
         {/* Login Card */}
-        <div 
+        <div
           className="px-6 py-6 md:px-10 md:py-8 lg:px-12 lg:py-10 rounded-xl w-full flex flex-col relative"
           style={{
             background: 'linear-gradient(180deg, rgba(35, 46, 60, 1) 0%, rgba(28, 36, 48, 1) 100%)',
@@ -131,7 +131,7 @@ export default function LoginPage() {
           }}
         >
           <div className="absolute inset-0 rounded-xl pointer-events-none" style={{ background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, transparent 50%)' }} />
-          
+
           <AnimatePresence mode="wait">
             {step === 'phone' && (
               <motion.div
@@ -216,7 +216,7 @@ export default function LoginPage() {
                     />
                   </div>
                 </div>
-                
+
                 <p className="text-xs md:text-sm text-center whitespace-nowrap shrink-0" style={{ color: '#6B7684' }}>
                   Demo OTP: <span className="font-mono font-bold" style={{ color: '#0FBF9F' }}>{demoOTP}</span>
                 </p>
