@@ -38,6 +38,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useCreateItem, useGetItemsCategories } from '@/hooks/api/useItems';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 // Price type configuration
 const PRICE_TYPES = {
@@ -69,12 +70,11 @@ export default function NewItemPage() {
   const { t, isBangla } = useAppTranslation();
   const { navigateTo } = useNavigation();
   const createItem = useCreateItem()
-  
+    const router = useRouter();
   const { data: categoriesData } = useGetItemsCategories();
   const categories = categoriesData?.data || [];
-  
   const [formData, setFormData] = useState(initialForm);
-  
+  console.log('Initial categories:', categories);
   const [showAdvancedPricing, setShowAdvancedPricing] = useState(false);
   
   const updateForm = (key: keyof typeof formData, value: string) => {
@@ -198,7 +198,8 @@ export default function NewItemPage() {
         onSuccess: data => {
           if(data.success){
             toast.success('Item saved successfully!');
-            setFormData(initialForm)
+            setFormData(initialForm);
+            router.push('/inventory');
           }
         }
       })

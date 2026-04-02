@@ -85,7 +85,7 @@ export default function PartiesPage() {
                   <User className="h-5 w-5 text-blue-600" />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-2xl font-bold text-gray-900 dark:text-white">{parties?.summary?.customers}</div>
+                  <div className="text-2xl font-bold text-gray-900 dark:text-white">{parties?.summary?.customers || 0}</div>
                   <p className="text-sm text-gray-500 truncate">{t('parties.customers')}</p>
                 </div>
               </div>
@@ -98,7 +98,7 @@ export default function PartiesPage() {
                   <Building2 className="h-5 w-5 text-purple-600" />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-2xl font-bold text-gray-900 dark:text-white">{parties?.summary?.suppliers}</div>
+                  <div className="text-2xl font-bold text-gray-900 dark:text-white">{parties?.summary?.suppliers || 0}</div>
                   <p className="text-sm text-gray-500 truncate">{t('parties.suppliers')}</p>
                 </div>
               </div>
@@ -111,7 +111,7 @@ export default function PartiesPage() {
                   <Users className="h-5 w-5 text-emerald-600" />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-xl font-bold text-emerald-600 truncate">{formatCurrency(parties?.summary?.totalReceivable)}</div>
+                  <div className="text-xl font-bold text-emerald-600 truncate">{formatCurrency(parties?.summary?.totalReceivable || 0)}</div>
                   <p className="text-sm text-gray-500 truncate">{t('dashboard.receivable')}</p>
                 </div>
               </div>
@@ -124,7 +124,7 @@ export default function PartiesPage() {
                   <Users className="h-5 w-5 text-red-600" />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-xl font-bold text-red-600 truncate">{formatCurrency(parties?.summary?.totalPayable)}</div>
+                  <div className="text-xl font-bold text-red-600 truncate">{formatCurrency(parties?.summary?.totalPayable || 0)}</div>
                   <p className="text-sm text-gray-500 truncate">{t('dashboard.payable')}</p>
                 </div>
               </div>
@@ -308,6 +308,7 @@ export default function PartiesPage() {
 
 // Party Card Component
 function PartyCard({ party, onView }: { party: Party; onView: () => void }) {
+   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { isBangla } = useAppTranslation();
   const { formatCurrency } = useCurrency();
 
@@ -411,15 +412,46 @@ function PartyCard({ party, onView }: { party: Party; onView: () => void }) {
           </p>
         </div>
         <div className="flex gap-1 shrink-0">
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(party.id)} >
-            {isDeleting ? <Loader2 className="h-4 w-4" /> : <Trash2 className="h-4 w-4" />}
+         
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => party.phone && window.open(`tel:${party.phone}`)}>
+            <MessageCircle className="h-4 w-4" />
           </Button>
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); router.push(`/parties/${party.id}/edit`) }}>
             <Edit className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => party.phone && window.open(`tel:${party.phone}`)}>
-            <MessageCircle className="h-4 w-4" />
-          </Button>
+          
+           <AlertDialog   open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                    <AlertDialogTrigger onClick={(e) => e.stopPropagation()} >
+                      <Button className='text-red-400' variant="ghost" size="sm">
+                        {isDeleting ?
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" /> :
+                          <Trash2 className="h-4 w-4 mr-2" />}
+                        {/* {isBangla ? 'মুছুন' : 'Delete'} */}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent onClick={(e) => e.stopPropagation()} className='w-[320px]'>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>{isBangla ? 'পার্টি মুছবেন?' : 'Delete Party?'}</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          {isBangla
+                            ? 'এই কাজ পূর্বাবস্থায় ফেরানো যাবে না। পার্টিটি স্থায়ীভাবে মুছে ফেলা হবে।'
+                            : 'This action cannot be undone. This party will be permanently deleted.'}
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>{isBangla ? 'বাতিল' : 'Cancel'}</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={handleDelete}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+          
+                          <Trash2 className="h-4 w-4 mr-2" />
+          
+                          {isBangla ? 'মুছুন' : 'Delete'}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
         </div>
       </div>
     </div >
@@ -430,4 +462,6 @@ function PartyCard({ party, onView }: { party: Party; onView: () => void }) {
 import { Edit } from 'lucide-react'; import { useRouter } from 'next/navigation';
 import { useDeletePary, useParties } from '@/hooks/api/useParties';
 import { toast } from '@/hooks/use-toast';
+import { AlertDialog } from '@radix-ui/react-alert-dialog';
+import { AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
 
