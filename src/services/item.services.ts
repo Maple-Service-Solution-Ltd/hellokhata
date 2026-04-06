@@ -22,12 +22,7 @@ export const getItems = async (params: {
 
     query.append("page", String(params?.page || 1));
     query.append("limit", String(params?.limit || 50));
-
-    console.log("params", params);
-
     const res = await client.get(`/api/items?${query.toString()}`);
-    //   if (!res.ok) throw new Error("Failed to fetch");
-    console.log("res", res);
     return res.data;
 };
 

@@ -49,11 +49,13 @@ import {
   Package,
   Loader2,
 } from 'lucide-react';
-import { useItems, useParties, useCreateQuotation } from '@/hooks/queries';
 import { useCurrency } from '@/hooks/useAppTranslation';
 import { useAppTranslation } from '@/hooks/useAppTranslation';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useParties } from '@/hooks/api/useParties';
+import { useGetItems } from '@/hooks/api/useItems';
+import { useCreateQuotation } from '@/hooks/api/useQuotations';
 
 interface QuotationItem {
   itemId: string;
@@ -79,12 +81,11 @@ export default function NewQuotationPage() {
   const [notes, setNotes] = useState('');
   const [items, setItems] = useState<QuotationItem[]>([]);
   
-  const { data: itemsData } = useItems();
-  const { data: parties = [] } = useParties();
-  const createQuotation = useCreateQuotation();
-
-  // itemsData is already Item[] array (extracted in hook)
-  const availableItems = itemsData || [];
+  const { data: itemsData } = useGetItems({search:searchTerm});
+  const { data: partiesData = [] } = useParties('customer');
+    const availableItems = itemsData?.data || [];
+  const parties = partiesData.data || [];
+  const {mutate,isPending} = useCreateQuotation();
   
   // Filter items based on search
   const filteredItems = useMemo(() => {
@@ -183,18 +184,13 @@ export default function NewQuotationPage() {
   
   // Handle save draft
   const handleSaveDraft = async () => {
-    if (items.length === 0) {
-      toast.error(isBangla ? 'অন্তত একটি পণ্য যোগ করুন' : 'Add at least one item');
-      return;
-    }
-    
+ 
     if (!validityDate) {
       toast.error(isBangla ? 'মেয়াদ উপযুক্তির তারিখ দিন' : 'Please select validity date');
       return;
     }
     
-    try {
-      await createQuotation.mutateAsync({
+    const draftData = {
         partyId: selectedPartyId || undefined,
         partyName: selectedPartyName || undefined,
         items: items.map(item => ({
@@ -210,15 +206,15 @@ export default function NewQuotationPage() {
         quotationDate: quotationDate.toISOString(),
         notes: notes || undefined,
         status: 'draft',
+      }
+
+      mutate(draftData, {
+        onSuccess: () => {
+          toast.success(isBangla ? 'খসড়া সংরক্ষণ হয়েছে!' : 'Draft saved successfully!');
+          router.push('/sales/quotations');
+        },
       });
-      
-      toast.success(isBangla ? 'খসড়া সংরক্ষিত হয়েছে!' : 'Draft saved successfully!');
-      router.push('/sales/quotations');
-    } catch (error) {
-      toast.error(isBangla ? 'সংরক্ষণে সমস্যা হয়েছে' : 'Failed to save');
     }
-  };
-  
   // Handle mark as sent
   const handleMarkAsSent = async () => {
     if (items.length === 0) {
@@ -231,34 +227,32 @@ export default function NewQuotationPage() {
       return;
     }
     
-    try {
-      await createQuotation.mutateAsync({
-        partyId: selectedPartyId || undefined,
-        partyName: selectedPartyName || undefined,
-        items: items.map(item => ({
-          itemId: item.itemId,
-          itemName: item.itemName,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice,
-          discount: item.discount,
-        })),
-        discount: discountAmount,
-        tax: taxAmount,
-        validityDate: validityDate.toISOString(),
-        quotationDate: quotationDate.toISOString(),
-        notes: notes || undefined,
-        status: 'sent',
-      });
+    // try {
+    //   await createQuotation.mutateAsync({
+    //     partyId: selectedPartyId || undefined,
+    //     // partyName: selectedPartyName || undefined,
+    //     items: items.map(item => ({
+    //       itemId: item.itemId,
+    //       itemName: item.itemName,
+    //       quantity: item.quantity,
+    //       unitPrice: item.unitPrice,
+    //       discount: item.discount,
+    //     })),
+    //     discount: discountAmount,
+    //     tax: taxAmount,
+    //     validityDate: validityDate.toISOString(),
+    //     quotationDate: quotationDate.toISOString(),
+    //     notes: notes || undefined,
+    //     // status: 'sent',
+    //   });
       
-      toast.success(isBangla ? 'কোটেশন প্রেরিত হয়েছে!' : 'Quotation sent successfully!');
-      router.push('/sales/quotations');
-    } catch (error) {
-      toast.error(isBangla ? 'প্রেরণে সমস্যা হয়েছে' : 'Failed to send');
-    }
+    //   toast.success(isBangla ? 'কোটেশন প্রেরিত হয়েছে!' : 'Quotation sent successfully!');
+    //   router.push('/sales/quotations');
+    // } catch (error) {
+    //   toast.error(isBangla ? 'প্রেরণে সমস্যা হয়েছে' : 'Failed to send');
+    // }
   };
-  
-  const isSubmitting = createQuotation.isPending;
-  
+    
   return (
     <div className="space-y-6">
         {/* Header */}
@@ -550,9 +544,9 @@ export default function NewQuotationPage() {
                 <Button
                   className="w-full"
                   onClick={handleSaveDraft}
-                  disabled={items.length === 0 || isSubmitting}
+                  disabled={items.length === 0 || isPending}
                 >
-                  {isSubmitting ? (
+                  {isPending ? (
                     <span className="flex items-center gap-2">
                       <Loader2 className="h-4 w-4 animate-spin" />
                       {isBangla ? 'সংরক্ষণ হচ্ছে...' : 'Saving...'}
@@ -564,13 +558,13 @@ export default function NewQuotationPage() {
                     </>
                   )}
                 </Button>
-                <Button
+                {/* <Button
                   variant="premium"
                   className="w-full"
                   onClick={handleMarkAsSent}
-                  disabled={items.length === 0 || isSubmitting || !validityDate}
+                  disabled={items.length === 0 || isPending || !validityDate}
                 >
-                  {isSubmitting ? (
+                  {isPending ? (
                     <span className="flex items-center gap-2">
                       <Loader2 className="h-4 w-4 animate-spin" />
                       {isBangla ? 'প্রেরণ হচ্ছে...' : 'Sending...'}
@@ -581,7 +575,7 @@ export default function NewQuotationPage() {
                       {isBangla ? 'প্রেরণ করুন' : 'Mark as Sent'}
                     </>
                   )}
-                </Button>
+                </Button> */}
                 <Button variant="outline" className="w-full" onClick={() => router.back()}>
                   <X className="h-4 w-4 mr-2" />
                   {isBangla ? 'বাতিল' : 'Cancel'}

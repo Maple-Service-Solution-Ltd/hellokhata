@@ -52,11 +52,12 @@ import {
 } from 'lucide-react';
 import { useCurrency, useDateFormat } from '@/hooks/useAppTranslation';
 import { useAppTranslation } from '@/hooks/useAppTranslation';
-import { useQuotations, useDeleteQuotation } from '@/hooks/queries';
+import {  useDeleteQuotation } from '@/hooks/queries';
 import { cn } from '@/lib/utils';
 import type { Quotation, QuotationStatus } from '@/types/quotation';
 import { QUOTATION_STATUS_CONFIG } from '@/types/quotation';
 import { toast } from 'sonner';
+import { useGetQuotations } from '@/hooks/api/useQuotations';
 
 export default function QuotationsPage() {
   const router = useRouter();
@@ -70,11 +71,8 @@ export default function QuotationsPage() {
   const [quotationToDelete, setQuotationToDelete] = useState<Quotation | null>(null);
   
   // Fetch quotations from API
-  const { data: quotations = [], isLoading, error } = useQuotations({
-    status: statusFilter !== 'all' ? (statusFilter as QuotationStatus) : undefined,
-    search: searchTerm || undefined,
-  });
-  
+  const { data: quotationData = [], isLoading } = useGetQuotations(searchTerm);
+  const quotations = quotationData?.data || [];
   // Delete mutation
   const deleteQuotation = useDeleteQuotation();
   
@@ -244,13 +242,16 @@ export default function QuotationsPage() {
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-            ) : error ? (
-              <div className="flex items-center justify-center py-12">
-                <p className="text-destructive">
-                  {isBangla ? 'ডেটা লোড করতে সমস্যা হয়েছে' : 'Failed to load quotations'}
-                </p>
-              </div>
-            ) : filteredQuotations.length === 0 ? (
+            ) 
+            // : 
+            // error ? (
+            //   <div className="flex items-center justify-center py-12">
+            //     <p className="text-destructive">
+            //       {isBangla ? 'ডেটা লোড করতে সমস্যা হয়েছে' : 'Failed to load quotations'}
+            //     </p>
+            //   </div>
+            // ) 
+            : filteredQuotations.length === 0 ? (
               <EmptyState
                 icon={<FileText className="h-8 w-8" />}
                 title={isBangla ? 'কোনো কোটেশন নেই' : 'No quotations found'}

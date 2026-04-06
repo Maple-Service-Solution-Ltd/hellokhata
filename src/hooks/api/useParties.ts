@@ -12,10 +12,10 @@ export const useCreateParty = () => {
     });
 };
 
-export const useParties = () => {
+export const useParties = (type: 'customer' | 'supplier' | 'both' = 'both') => {
     return useQuery({
         queryKey: ['parties'],
-        queryFn: getParties
+        queryFn: () => getParties(type)
     })
 }
 

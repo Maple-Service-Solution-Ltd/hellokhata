@@ -36,13 +36,14 @@ import {
   Receipt,
   Clock,
 } from 'lucide-react';
-import { useSales } from '@/hooks/queries';
 import { useCurrency, useDateFormat } from '@/hooks/useAppTranslation';
 import { useAppTranslation } from '@/hooks/useAppTranslation';
 import { cn } from '@/lib/utils';
 import { DetailModal, DetailRow, DetailSection } from '@/components/shared/DetailModal';
 import type { Sale } from '@/types';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useGetSales } from '@/hooks/api/useSales';
 
 export default function SalesPage() {
   const { t, isBangla } = useAppTranslation();
@@ -51,15 +52,9 @@ export default function SalesPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
 
-  const { data: sales = [], isLoading } = useSales();
-
-  // Filter sales
-  const filteredSales = sales.filter((sale) => {
-    const matchesSearch = sale.invoiceNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      sale.items.some((item) => item.itemName.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesStatus = statusFilter === 'all' || sale.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const { data: salesData, isLoading } = useGetSales(searchTerm);
+  const sales = salesData?.data || [];
+  const router = useRouter()
 
   // Calculate stats
   const todaySales = sales.reduce((sum, s) => sum + s.total, 0);
@@ -85,7 +80,7 @@ export default function SalesPage() {
           <Button className="shrink-0">
             <Plus className="h-4 w-4 mr-2" />
             <span className="whitespace-nowrap">{t('sales.newSale')}</span>
-          </Button></Link>
+          </Button></Link> 
         </div>
 
         {/* KPI Cards */}
@@ -171,14 +166,14 @@ export default function SalesPage() {
               <div className="flex items-center justify-center h-64">
                 <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
               </div>
-            ) : filteredSales.length === 0 ? (
+            ) : sales.length === 0 ? (
               <EmptyState
                 icon={<ShoppingCart className="h-8 w-8" />}
                 title={isBangla ? 'কোনো বিক্রি নেই' : 'No sales found'}
                 description={isBangla ? 'নতুন বিক্রি শুরু করুন' : 'Start a new sale'}
                 isBangla={isBangla}
                 action={
-                  <Button onClick={() => window.location.href = '/sales/new'}>
+                  <Button onClick={() => router.push('sales/new')}>
                     <Plus className="h-4 w-4 mr-2" />
                     <span className="whitespace-nowrap">{t('sales.newSale')}</span>
                   </Button>
@@ -187,7 +182,7 @@ export default function SalesPage() {
             ) : (
               <ScrollArea className="h-[500px]">
                 <div className="divide-y divide-border-subtle">
-                  {filteredSales.map((sale, index) => (
+                  {sales.map((sale, index) => (
                     <SaleRow 
                       key={sale.id} 
                       sale={sale} 
