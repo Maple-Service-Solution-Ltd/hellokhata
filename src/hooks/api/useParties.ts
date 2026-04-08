@@ -12,7 +12,7 @@ export const useCreateParty = () => {
     });
 };
 
-export const useParties = (type: 'customer' | 'supplier' | 'both' = 'both') => {
+export const useParties = (type: 'customer' | 'supplier' | 'both') => {
     return useQuery({
         queryKey: ['parties'],
         queryFn: () => getParties(type)
@@ -26,7 +26,7 @@ export const useParty = (id: string) => {
     })
 }
 
-export const useDeletePary = () => {
+export const useDeleteParty = () => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: deleteParty,

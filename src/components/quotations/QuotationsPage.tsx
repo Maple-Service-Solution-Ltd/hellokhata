@@ -52,12 +52,11 @@ import {
 } from 'lucide-react';
 import { useCurrency, useDateFormat } from '@/hooks/useAppTranslation';
 import { useAppTranslation } from '@/hooks/useAppTranslation';
-import {  useDeleteQuotation } from '@/hooks/queries';
 import { cn } from '@/lib/utils';
 import type { Quotation, QuotationStatus } from '@/types/quotation';
 import { QUOTATION_STATUS_CONFIG } from '@/types/quotation';
 import { toast } from 'sonner';
-import { useGetQuotations } from '@/hooks/api/useQuotations';
+import { useDeleteQuotation, useGetQoutationSummary, useGetQuotations } from '@/hooks/api/useQuotations';
 
 export default function QuotationsPage() {
   const router = useRouter();
@@ -72,9 +71,13 @@ export default function QuotationsPage() {
   
   // Fetch quotations from API
   const { data: quotationData = [], isLoading } = useGetQuotations(searchTerm);
+  const {data: summaryData} = useGetQoutationSummary();
+  const {mutate:deleteMutate,isPending:isDeleting} = useDeleteQuotation();
+
+  // Extract quotations and summary from API response
   const quotations = quotationData?.data || [];
-  // Delete mutation
-  const deleteQuotation = useDeleteQuotation();
+  const summary = summaryData?.data || {};
+
   
   // Filter quotations (client-side search if API doesn't support it)
   const filteredQuotations = useMemo(() => {
@@ -111,16 +114,14 @@ export default function QuotationsPage() {
   // Handle confirmed delete
   const handleDeleteConfirm = async () => {
     if (!quotationToDelete) return;
-    
-    try {
-      await deleteQuotation.mutateAsync(quotationToDelete.id);
-      toast.success(isBangla ? 'কোটেশন মুছে ফেলা হয়েছে' : 'Quotation deleted successfully');
-    } catch (error) {
-      toast.error(isBangla ? 'মুছে ফেলতে সমস্যা হয়েছে' : 'Failed to delete quotation');
-    } finally {
-      setDeleteDialogOpen(false);
-      setQuotationToDelete(null);
-    }
+
+    deleteMutate(quotationToDelete.id, {
+      onSuccess: () => {
+        toast.success(isBangla ? 'কোটেশন সফলভাবে মুছে ফেলা হয়েছে' : 'Quotation deleted successfully');  
+        setDeleteDialogOpen(false);
+        setQuotationToDelete(null);
+      }});
+
   };
   
   // Handle view quotation
@@ -288,7 +289,7 @@ export default function QuotationsPage() {
       
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className='w-[400px] sm:w-[350px]'>
           <AlertDialogHeader>
             <AlertDialogTitle>
               {isBangla ? 'কোটেশন মুছে ফেলুন' : 'Delete Quotation'}
@@ -308,7 +309,7 @@ export default function QuotationsPage() {
               onClick={handleDeleteConfirm}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deleteQuotation.isPending ? (
+              {isDeleting ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               ) : null}
               {isBangla ? 'মুছে ফেলুন' : 'Delete'}
@@ -336,7 +337,7 @@ function QuotationRow({ quotation, isBangla, index, onView, onEdit, onConvert, o
   const { formatDate } = useDateFormat();
   
   const statusConfig = QUOTATION_STATUS_CONFIG[quotation.status];
-  
+
   const isExpired = new Date(quotation.validityDate) < new Date() && quotation.status === 'sent';
   
   return (

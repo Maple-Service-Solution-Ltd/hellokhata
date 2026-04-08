@@ -42,25 +42,30 @@ import { useAppTranslation } from '@/hooks/useAppTranslation';
 import { cn } from '@/lib/utils';
 import { DetailModal, DetailRow, DetailSection } from '@/components/shared/DetailModal';
 import type { Party } from '@/types';
+
+
+
+
+// Import Edit icon
+import { Edit } from 'lucide-react'; import { useRouter } from 'next/navigation';
+import { useDeleteParty, useParties } from '@/hooks/api/useParties';
+import { toast } from '@/hooks/use-toast';
+import { AlertDialog } from '@radix-ui/react-alert-dialog';
+import { AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
+
+
 export default function PartiesPage() {
   const { t, isBangla } = useAppTranslation();
   const { formatCurrency } = useCurrency();
   const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<'customer' | 'supplier' | 'both'>('both');
   const [selectedParty, setSelectedParty] = useState<Party | null>(null);
 
-  const { data: parties = [], isLoading } = useParties();
-  console.log('Fetched parties:', parties);
-
+  const { data: partiesData, isLoading } = useParties();
+  const parties = partiesData?.data || [];
+  console.log('partiesData', partiesData)
+  console.log(parties)
   const router = useRouter()
-  // Filter parties
-  const filteredParties = parties?.data?.filter((party) => {
-    const matchesSearch = party.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      party.phone?.includes(searchTerm);
-    const matchesType = typeFilter === 'all' || party.type === typeFilter || party.type === 'both';
-    return matchesSearch && matchesType;
-  });
-
 
   return (
     <>
@@ -145,12 +150,12 @@ export default function PartiesPage() {
                   className="pl-9"
                 />
               </div>
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <Select value={typeFilter} onValueChange={() => setTypeFilter(typeFilter === 'customer' ? 'supplier' : typeFilter === 'supplier' ? 'both' : 'customer')}>
                 <SelectTrigger className="w-full md:w-[180px]">
                   <SelectValue placeholder={isBangla ? 'ধরন' : 'Type'} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{isBangla ? 'সব' : 'All'}</SelectItem>
+                  <SelectItem value="both">{isBangla ? 'সব' : 'All'}</SelectItem>
                   <SelectItem value="customer">{isBangla ? 'গ্রাহক' : 'Customer'}</SelectItem>
                   <SelectItem value="supplier">{isBangla ? 'সরবরাহকারী' : 'Supplier'}</SelectItem>
                 </SelectContent>
@@ -169,7 +174,7 @@ export default function PartiesPage() {
               <div className="flex items-center justify-center h-48">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
               </div>
-            ) : filteredParties.length === 0 ? (
+            ) : parties.length === 0 ? (
               <EmptyState
                 icon={Users}
                 title={isBangla ? 'কোনো পার্টি নেই' : 'No parties found'}
@@ -183,7 +188,7 @@ export default function PartiesPage() {
             ) : (
               <ScrollArea className="h-[500px] pr-4">
                 <div className="space-y-3">
-                  {filteredParties.map((party: any) => (
+                  {parties?.map((party: any) => (
                     <PartyCard
                       key={party.id}
                       party={party}
@@ -308,11 +313,11 @@ export default function PartiesPage() {
 
 // Party Card Component
 function PartyCard({ party, onView }: { party: Party; onView: () => void }) {
-   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { isBangla } = useAppTranslation();
   const { formatCurrency } = useCurrency();
 
-  const { mutate: deleteParty, isPending: isDeleting } = useDeletePary();
+  const { mutate: deleteParty, isPending: isDeleting } = useDeleteParty();
   const handleDelete = (id) => {
     deleteParty(id, {
       onSuccess: (data) => {
@@ -412,56 +417,49 @@ function PartyCard({ party, onView }: { party: Party; onView: () => void }) {
           </p>
         </div>
         <div className="flex gap-1 shrink-0">
-         
+
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => party.phone && window.open(`tel:${party.phone}`)}>
             <MessageCircle className="h-4 w-4" />
           </Button>
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); router.push(`/parties/${party.id}/edit`) }}>
             <Edit className="h-4 w-4" />
           </Button>
-          
-           <AlertDialog   open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-                    <AlertDialogTrigger onClick={(e) => e.stopPropagation()} >
-                      <Button className='text-red-400' variant="ghost" size="sm">
-                        {isDeleting ?
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" /> :
-                          <Trash2 className="h-4 w-4 mr-2" />}
-                        {/* {isBangla ? 'মুছুন' : 'Delete'} */}
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent onClick={(e) => e.stopPropagation()} className='w-[320px]'>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>{isBangla ? 'পার্টি মুছবেন?' : 'Delete Party?'}</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          {isBangla
-                            ? 'এই কাজ পূর্বাবস্থায় ফেরানো যাবে না। পার্টিটি স্থায়ীভাবে মুছে ফেলা হবে।'
-                            : 'This action cannot be undone. This party will be permanently deleted.'}
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>{isBangla ? 'বাতিল' : 'Cancel'}</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={handleDelete}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        >
-          
-                          <Trash2 className="h-4 w-4 mr-2" />
-          
-                          {isBangla ? 'মুছুন' : 'Delete'}
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+
+          <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+            <AlertDialogTrigger onClick={(e) => e.stopPropagation()} >
+              <Button className='text-red-400' variant="ghost" size="sm">
+                {isDeleting ?
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" /> :
+                  <Trash2 className="h-4 w-4 mr-2" />}
+                {/* {isBangla ? 'মুছুন' : 'Delete'} */}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent onClick={(e) => e.stopPropagation()} className='w-[320px]'>
+              <AlertDialogHeader>
+                <AlertDialogTitle>{isBangla ? 'পার্টি মুছবেন?' : 'Delete Party?'}</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {isBangla
+                    ? 'এই কাজ পূর্বাবস্থায় ফেরানো যাবে না। পার্টিটি স্থায়ীভাবে মুছে ফেলা হবে।'
+                    : 'This action cannot be undone. This party will be permanently deleted.'}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>{isBangla ? 'বাতিল' : 'Cancel'}</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => handleDelete(party.id)}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+
+                  <Trash2 className="h-4 w-4 mr-2" />
+
+                  {isBangla ? 'মুছুন' : 'Delete'}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
     </div >
   );
 }
-
-// Import Edit icon
-import { Edit } from 'lucide-react'; import { useRouter } from 'next/navigation';
-import { useDeletePary, useParties } from '@/hooks/api/useParties';
-import { toast } from '@/hooks/use-toast';
-import { AlertDialog } from '@radix-ui/react-alert-dialog';
-import { AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
 

@@ -47,7 +47,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { useDeletePary, useParty, useUpdateParty } from '@/hooks/api/useParties';
+import { useDeleteParty, useParty, useUpdateParty } from '@/hooks/api/useParties';
 
 interface EditPartyPageProps {
   params: Promise<{ id: string }>;
@@ -81,7 +81,7 @@ export default function EditPartyPage({ params }: EditPartyPageProps) {
   const [categories, setCategories] = useState<Array<{ id: string; name: string; nameBn: string | null }>>([]);
 
   const { data: party, isLoading: partyLoading } = useParty(id);
-  const { mutate: deleteParty, isPending: isDeleting } = useDeletePary();
+  const { mutate: deleteParty, isPending: isDeleting } = useDeleteParty();
   const { mutate: updateParty, isPending: isSaving } = useUpdateParty();
 
   // Form state

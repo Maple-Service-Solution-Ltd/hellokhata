@@ -43,7 +43,7 @@ import { DetailModal, DetailRow, DetailSection } from '@/components/shared/Detai
 import type { Sale } from '@/types';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useGetSales } from '@/hooks/api/useSales';
+import { useGetSales, useGetSalesSummary, } from '@/hooks/api/useSales';
 
 export default function SalesPage() {
   const { t, isBangla } = useAppTranslation();
@@ -53,9 +53,11 @@ export default function SalesPage() {
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
 
   const { data: salesData, isLoading } = useGetSales(searchTerm);
+  const {data: salesSummary} = useGetSalesSummary();
   const sales = salesData?.data || [];
-  const router = useRouter()
-
+  const summary = salesSummary?.data ;
+  
+   const router = useRouter()
   // Calculate stats
   const todaySales = sales.reduce((sum, s) => sum + s.total, 0);
   const monthSales = todaySales * 30;

@@ -1,3 +1,4 @@
+import { get } from 'react-hook-form';
 import client from "@/lib/axios";
 
 export const createQuotation = async (data: any) => {
@@ -10,15 +11,16 @@ export const getQuotations = async (search: string) => {
     return res.data;
 }
 
-// export const getQuotation = async (id: string) => {
-//     const res = await client.get(`/api/quotations/${id}`);
-//     return res.data;
-// }
+export const getQuotationSummary = async () => {
+    const res = await client.get('/api/quotations/summary');
+    return res.data;
+}
 
-// export const deleteQuotation = async (id: string) => {
-//     const res = await client.delete(`/api/quotations/${id}`);
-//     return res.data;
-// }
+
+export const deleteQuotation = async (id: string) => {
+    const res = await client.delete(`/api/quotations/${id}`);
+    return res.data;
+}
 
 // export const updateQuotation = async ({ id, data }: { id: string, data: any }) => {
 //     const res = await client.patch(`/api/quotations/${id}`, data);

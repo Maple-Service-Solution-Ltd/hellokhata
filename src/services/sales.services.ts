@@ -9,3 +9,8 @@ export const getSales = async(search:string) => {
     const res = await client.get('/api/sales', { params: { search } });
     return res.data
 }
+
+export const getSalesSummary = async() => {
+    const res = await client.get('/api/sales/summary');
+    return res.data
+}
