@@ -7,7 +7,7 @@ export const createParty = async (data: Party) => {
     return res.data;
 }
 
-export const getParties = async (type: 'customer' | 'supplier' | 'both') => {
+export const getParties = async (type?: 'customer' | 'supplier' | 'both') => {
     const res = await client.get('/api/parties', { params: { type } });
     return res.data;
 }

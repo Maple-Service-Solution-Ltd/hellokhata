@@ -63,8 +63,6 @@ export default function PartiesPage() {
 
   const { data: partiesData, isLoading } = useParties();
   const parties = partiesData?.data || [];
-  console.log('partiesData', partiesData)
-  console.log(parties)
   const router = useRouter()
 
   return (
@@ -90,7 +88,7 @@ export default function PartiesPage() {
                   <User className="h-5 w-5 text-blue-600" />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-2xl font-bold text-gray-900 dark:text-white">{parties?.summary?.customers || 0}</div>
+                  <div className="text-2xl font-bold text-gray-900 dark:text-white">{partiesData?.summary?.customers || 0}</div>
                   <p className="text-sm text-gray-500 truncate">{t('parties.customers')}</p>
                 </div>
               </div>
@@ -103,7 +101,7 @@ export default function PartiesPage() {
                   <Building2 className="h-5 w-5 text-purple-600" />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-2xl font-bold text-gray-900 dark:text-white">{parties?.summary?.suppliers || 0}</div>
+                  <div className="text-2xl font-bold text-gray-900 dark:text-white">{partiesData?.summary?.suppliers || 0}</div>
                   <p className="text-sm text-gray-500 truncate">{t('parties.suppliers')}</p>
                 </div>
               </div>
@@ -116,7 +114,7 @@ export default function PartiesPage() {
                   <Users className="h-5 w-5 text-emerald-600" />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-xl font-bold text-emerald-600 truncate">{formatCurrency(parties?.summary?.totalReceivable || 0)}</div>
+                  <div className="text-xl font-bold text-emerald-600 truncate">{formatCurrency(partiesData?.summary?.totalReceivable || 0)}</div>
                   <p className="text-sm text-gray-500 truncate">{t('dashboard.receivable')}</p>
                 </div>
               </div>
@@ -129,7 +127,7 @@ export default function PartiesPage() {
                   <Users className="h-5 w-5 text-red-600" />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-xl font-bold text-red-600 truncate">{formatCurrency(parties?.summary?.totalPayable || 0)}</div>
+                  <div className="text-xl font-bold text-red-600 truncate">{formatCurrency(partiesData?.summary?.totalPayable || 0)}</div>
                   <p className="text-sm text-gray-500 truncate">{t('dashboard.payable')}</p>
                 </div>
               </div>

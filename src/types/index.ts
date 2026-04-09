@@ -52,7 +52,7 @@ export interface FeatureFlags {
 // Business Types
 // ============================================
 
-export type BusinessType = 
+export type BusinessType =
   | 'retail'
   | 'wholesale'
   | 'restaurant'
@@ -353,6 +353,14 @@ export interface Sale {
   branchId?: string;
   invoiceNo: string;
   partyId?: string;
+  party?: {
+    id: string;
+    name: string;
+    phone: string;
+    type: string;
+  };
+  partyName?: string;
+  partyPhone?: string;
   items: SaleItem[];
   subtotal: number;
   discount: number;
@@ -361,16 +369,16 @@ export interface Sale {
   paidAmount: number;
   dueAmount: number;
   paymentMethod: PaymentMethod;
-  pricingTier?: PricingTier;
+  pricingTier?: PricingTier | null;
   status: SaleStatus;
   profit: number;
-  notes?: string;
+  notes?: string | null;
   createdBy: string;
   staffId?: string;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt?: Date | null;
 }
-
 export interface SaleItem {
   id: string;
   saleId: string;
@@ -382,8 +390,12 @@ export interface SaleItem {
   discount: number;
   total: number;
   profit: number;
-  priceTier?: PricingTier;
   createdAt: Date;
+  item: {
+    id: string;
+    name: string;
+    sku: string;
+  };
 }
 
 // ============================================
@@ -963,7 +975,7 @@ export interface CreditAgingFilter extends BranchFilter {
 // Feature Gate Types (NEW)
 // ============================================
 
-export type FeatureName = 
+export type FeatureName =
   | 'multiBranch'
   | 'creditControl'
   | 'auditTrail'

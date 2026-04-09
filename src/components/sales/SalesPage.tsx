@@ -50,24 +50,26 @@ export default function SalesPage() {
   const { formatCurrency } = useCurrency();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
 
+  const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const { data: salesData, isLoading } = useGetSales(searchTerm);
-  const {data: salesSummary} = useGetSalesSummary();
+
+  const { data: salesSummary } = useGetSalesSummary();
   const sales = salesData?.data || [];
-  const summary = salesSummary?.data ;
-  
-   const router = useRouter()
+  const summary = salesSummary?.data;
+
+  const router = useRouter()
   // Calculate stats
   const todaySales = sales.reduce((sum, s) => sum + s.total, 0);
   const monthSales = todaySales * 30;
   const invoiceCount = sales.length;
   const avgSale = invoiceCount > 0 ? todaySales / invoiceCount : 0;
 
+  console.log(selectedSale)
   return (
     <>
-    <div className="space-y-6">
-      {/* Header */}
+      <div className="space-y-6">
+        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
@@ -79,10 +81,10 @@ export default function SalesPage() {
             </p>
           </div>
           <Link href="/sales/new">
-          <Button className="shrink-0">
-            <Plus className="h-4 w-4 mr-2" />
-            <span className="whitespace-nowrap">{t('sales.newSale')}</span>
-          </Button></Link> 
+            <Button className="shrink-0">
+              <Plus className="h-4 w-4 mr-2" />
+              <span className="whitespace-nowrap">{t('sales.newSale')}</span>
+            </Button></Link>
         </div>
 
         {/* KPI Cards */}
@@ -185,10 +187,10 @@ export default function SalesPage() {
               <ScrollArea className="h-[500px]">
                 <div className="divide-y divide-border-subtle">
                   {sales.map((sale, index) => (
-                    <SaleRow 
-                      key={sale.id} 
-                      sale={sale} 
-                      isBangla={isBangla} 
+                    <SaleRow
+                      key={sale.id}
+                      sale={sale}
+                      isBangla={isBangla}
                       index={index}
                       onView={() => setSelectedSale(sale)}
                     />
@@ -210,7 +212,7 @@ export default function SalesPage() {
       >
         {selectedSale && (
           <>
-            <DetailSection title={isBangla ? 'বিক্রির তথ্য' : 'Sale Information'}>
+            {/* <DetailSection title={isBangla ? 'বিক্রির তথ্য' : 'Sale Information'}>
               <DetailRow
                 label={isBangla ? 'মোট পরিমাণ' : 'Total Amount'}
                 value={
@@ -252,15 +254,162 @@ export default function SalesPage() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-foreground truncate">{item.itemName}</p>
+                      <p className="text-xs text-muted-foreground truncate">SKU: {item.item.sku}</p>
                       <p className="text-sm text-muted-foreground whitespace-nowrap">
                         {item.quantity} × {formatCurrency(item.unitPrice)}
+                        {item.discount > 0 && (
+                          <span className="ml-2 text-amber-600">-{formatCurrency(item.discount)} off</span>
+                        )}
                       </p>
                     </div>
                   </div>
-                  <p className="font-bold text-foreground shrink-0">{formatCurrency(item.total)}</p>
+                  <div className="flex flex-col items-end shrink-0 gap-1">
+                    <p className="font-bold text-foreground">{formatCurrency(item.total)}</p>
+                    <p className="text-xs text-muted-foreground">Cost: {formatCurrency(item.costPrice)}</p>
+                    <p className="text-xs text-green-600 font-medium">+{formatCurrency(item.profit)} profit</p>
+                  </div>
+                </div>
+              ))}
+            </DetailSection> */}
+            <DetailSection title={isBangla ? 'কাস্টমার তথ্য' : 'Customer'}>
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+                <div className="h-10 w-10 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center shrink-0">
+                  <span className="text-sm font-medium text-purple-800 dark:text-purple-300">
+                    {selectedSale?.party?.name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
+                  </span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-foreground truncate">{selectedSale?.party?.name}</p>
+                  <p className="text-sm text-muted-foreground truncate">{selectedSale?.party?.phone}</p>
+                </div>
+                <span className="text-xs font-medium px-2 py-1 rounded-md bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-300 capitalize shrink-0">
+                  {selectedSale?.party?.type}
+                </span>
+              </div>
+            </DetailSection>
+
+            <DetailSection title={isBangla ? 'পণ্য তালিকা' : 'Items'}>
+              {selectedSale.items.map((item, idx) => (
+                <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-800 gap-4">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                      <Package className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-foreground truncate">{item.itemName}</p>
+                      <p className="text-xs text-muted-foreground truncate">SKU: {item.item.sku}</p>
+                      <p className="text-sm text-muted-foreground whitespace-nowrap">
+                        {item.quantity} × {formatCurrency(item.unitPrice)}
+                        {item.discount > 0 && (
+                          <span className="ml-2 text-amber-600">-{formatCurrency(item.discount)} off</span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end shrink-0 gap-1">
+                    <p className="font-bold text-foreground">{formatCurrency(item.total)}</p>
+                    <p className="text-xs text-muted-foreground">Cost: {formatCurrency(item.costPrice)}</p>
+                    <p className="text-xs text-green-600 font-medium">+{formatCurrency(item.profit)} profit</p>
+                  </div>
                 </div>
               ))}
             </DetailSection>
+            <DetailSection title={isBangla ? 'বিক্রির তথ্য' : 'Sale Information'}>
+
+              <DetailRow
+                label={isBangla ? 'তারিখ ও সময়' : 'Date & Time'}
+                value={new Date(selectedSale.createdAt).toLocaleString()}
+                icon={<Clock className="h-5 w-5 text-blue-600" />}
+              />
+              <DetailRow
+                label={isBangla ? 'স্ট্যাটাস' : 'Status'}
+                value={
+                  <span className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium ${selectedSale?.status === "completed"
+                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                    : selectedSale?.status === "pending"
+                      ? "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300"
+                      : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+                    }`}>
+                    <span className={`h-1.5 w-1.5 rounded-full ${selectedSale?.status === "completed" ? "bg-green-600"
+                      : selectedSale?.status === "pending" ? "bg-amber-600"
+                        : "bg-red-600"
+                      }`} />
+                    {selectedSale?.status?.charAt(0).toUpperCase() + selectedSale?.status?.slice(1)}
+                  </span>
+                }
+                icon={<TrendingUp className="h-5 w-5 text-amber-600" />}
+              />
+              <DetailRow
+                label={isBangla ? 'পেমেন্ট পদ্ধতি' : 'Payment Method'}
+                value={selectedSale.paymentMethod}
+                icon={<CreditCard className="h-5 w-5 text-purple-600" />}
+              />
+              <DetailRow
+                label={isBangla ? 'সাবটোটাল' : 'Subtotal'}
+                value={formatCurrency(selectedSale.subtotal)}
+                icon={<DollarSign className="h-5 w-5 text-gray-500" />}
+              />
+              {selectedSale.discount > 0 && (
+                <DetailRow
+                  label={isBangla ? 'ছাড়' : 'Discount'}
+                  value={<span className="text-amber-600">-{formatCurrency(selectedSale.discount)}</span>}
+                  icon={<DollarSign className="h-5 w-5 text-amber-600" />}
+                />
+              )}
+              {selectedSale.tax > 0 && (
+                <DetailRow
+                  label={isBangla ? 'ট্যাক্স' : 'Tax'}
+                  value={formatCurrency(selectedSale.tax)}
+                  icon={<DollarSign className="h-5 w-5 text-gray-500" />}
+                />
+              )}
+              <DetailRow
+                label={isBangla ? 'মোট পরিমাণ' : 'Total Amount'}
+                value={
+                  <span className="text-xl font-bold text-emerald-600">
+                    {formatCurrency(selectedSale.total)}
+                  </span>
+                }
+                icon={<DollarSign className="h-5 w-5 text-emerald-600" />}
+              />
+              <DetailRow
+                label={isBangla ? 'পরিশোধিত' : 'Paid Amount'}
+                value={
+                  <span className="font-bold text-green-600">
+                    {formatCurrency(selectedSale.paidAmount)}
+                  </span>
+                }
+                icon={<DollarSign className="h-5 w-5 text-green-600" />}
+              />
+              <DetailRow
+                label={isBangla ? 'বাকি' : 'Due Amount'}
+                value={
+                  <span className="font-bold text-red-600">
+                    {formatCurrency(selectedSale.dueAmount)}
+                  </span>
+                }
+                icon={<DollarSign className="h-5 w-5 text-red-600" />}
+              />
+              {selectedSale.profit > 0 && (
+                <DetailRow
+                  label={isBangla ? 'লাভ' : 'Profit'}
+                  value={
+                    <span className="font-bold text-emerald-600">
+                      {formatCurrency(selectedSale.profit)}
+                    </span>
+                  }
+                  icon={<TrendingUp className="h-5 w-5 text-emerald-600" />}
+                />
+              )}
+              {selectedSale.notes && (
+                <DetailRow
+                  label={isBangla ? 'নোট' : 'Notes'}
+                  value={selectedSale.notes}
+                  icon={<FileText className="h-5 w-5 text-gray-500" />}
+                />
+              )}
+            </DetailSection>
+
 
             {/* Actions */}
             <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-800">
@@ -275,7 +424,7 @@ export default function SalesPage() {
             </div>
           </>
         )}
-        </DetailModal>
+      </DetailModal>
     </>
   );
 }
@@ -295,7 +444,7 @@ function SaleRow({ sale, isBangla, index, onView }: { sale: Sale; isBangla: bool
   const status = statusConfig[sale.status] || statusConfig.completed;
 
   return (
-    <div 
+    <div
       className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors cursor-pointer group stagger-item gap-4"
       style={{ animationDelay: `${index * 30}ms` }}
       onClick={onView}

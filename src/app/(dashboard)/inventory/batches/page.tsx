@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -25,6 +25,7 @@ import { useNavigation } from '@/stores/uiStore';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
+import { useGetBatches, useGetBatchesStatus } from '@/hooks/api/useBatches';
 
 interface Batch {
   id: string;
@@ -47,117 +48,21 @@ interface Batch {
 
 export default function BatchesPage() {
   const { t, isBangla } = useAppTranslation();
-  const [batches, setBatches] = useState<Batch[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<'all' | 'expiring' | 'expired'>('all');
   const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null);
-  const [expiringSummary, setExpiringSummary] = useState<{
-    expiringCount: number;
-    expiredCount: number;
-    expiringValue: number;
-    expiredValue: number;
-  } | null>(null);
+  // const [expiringSummary, setExpiringSummary] = useState<{
+  //   expiringCount: number;
+  //   expiredCount: number;
+  //   expiringValue: number;
+  //   expiredValue: number;
+  // } | null>(null);
 
-
+const {data: batchesStatusData} = useGetBatchesStatus();
+const {data:batchesData, isLoading:isLoadingBatches} = useGetBatches()
+const batchesStatus = batchesStatusData?.data;
+const batches = batchesData?.data || [];
   const router = useRouter();
-
-
-  useEffect(() => {
-    fetchBatches();
-    fetchExpiryAlerts();
-  }, [filter]);
-
-
-  const fetchBatches = async () => {
-    setLoading(true);
-    try {
-      let url = '/api/batches';
-      if (filter === 'expiring') {
-        url += '?expiring=30';
-      } else if (filter === 'expired') {
-        url += '?includeExpired=true';
-      }
-      
-      const response = await fetch(url);
-      const data = await response.json();
-      if (data.success) {
-        setBatches(data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching batches:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchExpiryAlerts = async () => {
-    try {
-      const response = await fetch('/api/batches', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ daysThreshold: 30 }),
-      });
-      
-      const data = await response.json();
-      if (data.success) {
-        setExpiringSummary(data.data.summary);
-      }
-    } catch (error) {
-      console.error('Error fetching expiry alerts:', error);
-    }
-  };
-
-  const filteredBatches = batches.filter(b => {
-    if (filter === 'expired') {
-      return b.isExpired;
-    }
-    if (filter === 'expiring') {
-      return b.isExpiringSoon && !b.isExpired;
-    }
-    return true;
-  }).filter(b => {
-    const matchesSearch = 
-      b.batchNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      b.item?.name?.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesSearch;
-  });
-
-  const getExpiryBadge = (batch: Batch) => {
-    if (batch.isExpired) {
-      return (
-        <Badge className="bg-red-100 text-red-700 gap-1">
-          <XCircle className="h-3 w-3" />
-          {isBangla ? 'মেয়াদোত্তীর্ণ' : 'Expired'}
-        </Badge>
-      );
-    }
-    
-    if (batch.isExpiringSoon) {
-      return (
-        <Badge className="bg-amber-100 text-amber-700 gap-1">
-          <AlertTriangle className="h-3 w-3" />
-          {batch.daysUntilExpiry} {isBangla ? 'দিন বাকি' : 'days left'}
-        </Badge>
-      );
-    }
-    
-    if (batch.expiryDate) {
-      return (
-        <Badge variant="outline" className="gap-1">
-          <Calendar className="h-3 w-3" />
-          {format(new Date(batch.expiryDate), 'dd MMM yyyy')}
-        </Badge>
-      );
-    }
-    
-    return (
-      <Badge variant="outline" className="text-muted-foreground">
-        {isBangla ? 'মেয়াদ নেই' : 'No expiry'}
-      </Badge>
-    );
-  };
-
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -179,8 +84,8 @@ export default function BatchesPage() {
                 </h1>
                 <p className="text-sm text-muted-foreground">
                   {isBangla 
-                    ? `${filteredBatches.length}টি ব্যাচ` 
-                    : `${filteredBatches.length} batches`}
+                    ? `${batches.length}টি ব্যাচ` 
+                    : `${batches.length} batches`}
                 </p>
               </div>
             </div>
@@ -194,7 +99,7 @@ export default function BatchesPage() {
       </div>
 
       {/* Alert Banner */}
-      {expiringSummary && (expiringSummary.expiredCount > 0 || expiringSummary.expiringCount > 0) && (
+      {/* {expiringSummary && (expiringSummary.expiredCount > 0 || expiringSummary.expiringCount > 0) && (
         <div className="bg-gradient-to-r from-red-50 to-amber-50 border-b">
           <div className="max-w-7xl mx-auto px-4 py-3">
             <div className="flex items-center justify-between">
@@ -239,7 +144,7 @@ export default function BatchesPage() {
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Stats Cards */}
       <div className="max-w-7xl mx-auto px-4 py-4">
@@ -254,7 +159,7 @@ export default function BatchesPage() {
                   <p className="text-sm text-muted-foreground">
                     {isBangla ? 'মোট ব্যাচ' : 'Total Batches'}
                   </p>
-                  <p className="text-xl font-bold">{batches.length}</p>
+                  <p className="text-xl font-bold">{batchesStatus?.totalBatches || 0}</p>
                 </div>
               </div>
             </CardContent>
@@ -271,7 +176,7 @@ export default function BatchesPage() {
                     {isBangla ? 'মেয়াদোত্তীর্ণ' : 'Expired'}
                   </p>
                   <p className="text-xl font-bold text-red-700">
-                    {expiringSummary?.expiredCount || 0}
+                    {batchesStatus?.expired || 0}
                   </p>
                 </div>
               </div>
@@ -289,7 +194,7 @@ export default function BatchesPage() {
                     {isBangla ? '৩০ দিনের মধ্যে' : 'Expiring in 30 Days'}
                   </p>
                   <p className="text-xl font-bold text-amber-700">
-                    {expiringSummary?.expiringCount || 0}
+                    {batchesStatus?.expiringIn30Days || 0}
                   </p>
                 </div>
               </div>
@@ -307,7 +212,7 @@ export default function BatchesPage() {
                     {isBangla ? 'সক্রিয় ব্যাচ' : 'Active Batches'}
                   </p>
                   <p className="text-xl font-bold">
-                    {batches.filter(b => b.isActive && !b.isExpired).length}
+                    {batchesStatus?.activeBatches || 0}
                   </p>
                 </div>
               </div>
@@ -358,14 +263,14 @@ export default function BatchesPage() {
 
       {/* Batches List */}
       <div className="max-w-7xl mx-auto px-4 py-4">
-        {loading ? (
+        {isLoadingBatches ? (
           <div className="text-center py-12">
             <Package className="h-8 w-8 animate-pulse mx-auto text-muted-foreground" />
             <p className="mt-4 text-muted-foreground">
               {isBangla ? 'লোড হচ্ছে...' : 'Loading...'}
             </p>
           </div>
-        ) : filteredBatches.length === 0 ? (
+        ) : batches.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
               <Package className="h-12 w-12 mx-auto text-muted-foreground opacity-50" />
@@ -381,7 +286,7 @@ export default function BatchesPage() {
           </Card>
         ) : (
           <div className="space-y-3">
-            {filteredBatches.map((batch) => (
+            {batches.map((batch) => (
               <Card 
                 key={batch.id}
                 className={cn(
@@ -407,7 +312,8 @@ export default function BatchesPage() {
                       <div>
                         <div className="flex items-center gap-2">
                           <h3 className="font-semibold">{batch.batchNumber}</h3>
-                          {getExpiryBadge(batch)}
+                          {/*  {batches(batch)}  */}
+                          fsdfsdss
                         </div>
                         
                         <p className="mt-1 text-sm text-muted-foreground">
@@ -443,7 +349,7 @@ export default function BatchesPage() {
       {/* Batch Detail Modal */}
       {selectedBatch && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-lg">
+          <Card className="w-[400px] max-w-full">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <Package className="h-5 w-5" />
