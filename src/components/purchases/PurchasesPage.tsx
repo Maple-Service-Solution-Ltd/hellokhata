@@ -1,7 +1,3 @@
-// Hello Khata OS - Combined Purchases Page
-// Unified view for Purchases & Purchase Orders with optional workflow
-// হ্যালো খাতা - একত্রিত ক্রয় পৃষ্ঠা
-
 'use client';
 
 import { useState } from 'react';
@@ -34,6 +30,11 @@ import {
   Send,
   AlertCircle,
   ShoppingCart,
+  MessageSquare,
+  User,
+  Building,
+  CreditCard,
+  Store,
 } from 'lucide-react';
 import { usePurchases } from '@/hooks/queries';
 import { useCurrency, useDateFormat } from '@/hooks/useAppTranslation';
@@ -44,6 +45,8 @@ import { DetailModal, DetailRow, DetailSection } from '@/components/shared/Detai
 import { useQuery } from '@tanstack/react-query';
 import type { Purchase } from '@/types';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useGetPurchases } from '@/hooks/api/usePurchases';
 
 // Purchase Order interface
 interface PurchaseOrderItem {
@@ -90,12 +93,14 @@ export default function PurchasesPage() {
   const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null);
   const [selectedPO, setSelectedPO] = useState<PurchaseOrder | null>(null);
 
-  const { data: purchases = [], isLoading: purchasesLoading } = usePurchases();
+  const { data: purchases = [], isLoading: purchasesLoading } = useGetPurchases();
   const { data: orders = [], isLoading: ordersLoading } = useQuery({
     queryKey: ['purchase-orders'],
     queryFn: fetchPurchaseOrders,
   });
 
+  console.log(purchases)
+  const router = useRouter()
   const isLoading = purchasesLoading || ordersLoading;
 
   // Calculate purchase stats
@@ -129,6 +134,7 @@ export default function PurchasesPage() {
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
 
   return (
     <>
@@ -256,7 +262,7 @@ export default function PurchasesPage() {
                     description={isBangla ? 'নতুন ক্রয় শুরু করুন' : 'Start a new purchase'}
                     isBangla={isBangla}
                     action={
-                      <Button onClick={() => navigateTo('purchases-new')}>
+                      <Button onClick={() => router.push('/purchases/new')}>
                         <Plus className="h-4 w-4 mr-2" />
                         <span className="whitespace-nowrap">{isBangla ? 'স্টক যোগ' : 'Add Stock'}</span>
                       </Button>
