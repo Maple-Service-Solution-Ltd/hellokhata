@@ -35,10 +35,13 @@ import { useItems, useSuppliers, useBranches } from '@/hooks/queries';
 import { useCurrency } from '@/hooks/useAppTranslation';
 import { useAppTranslation } from '@/hooks/useAppTranslation';
 import { useNavigation } from '@/stores/uiStore';
-import { useSessionStore } from '@/stores/sessionStore';
+import { useSessionStore, useUser } from '@/stores/sessionStore';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { useGetItems } from '@/hooks/api/useItems';
+import { useParties } from '@/hooks/api/useParties';
+import { useCreatePurchases } from '@/hooks/api/usePurchases';
 
 interface PurchaseItem {
   tempId: string;
@@ -53,17 +56,13 @@ interface PurchaseItem {
 export default function NewPurchasePage() {
   const { t, isBangla } = useAppTranslation();
   const { formatCurrency } = useCurrency();
-  const { navigateTo } = useNavigation();
-  const { business } = useSessionStore();
   
   // Form state
   const [supplierId, setSupplierId] = useState<string>('none');
-  const [branchId, setBranchId] = useState<string>('');
-  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'credit' | 'partial'>('cash');
+  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'bank' | 'mobile_banking'>('cash');
   const [paidAmount, setPaidAmount] = useState<string>('0');
   const [notes, setNotes] = useState<string>('');
   const [items, setItems] = useState<PurchaseItem[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Add item modal state
   const [showItemSelector, setShowItemSelector] = useState(false);
@@ -72,24 +71,30 @@ export default function NewPurchasePage() {
   const [itemCost, setItemCost] = useState<string>('');
 
   // Fetch data
-  const { data: products = [], isLoading: productsLoading } = useItems();
-  const { data: suppliers = [], isLoading: suppliersLoading } = useSuppliers();
-  const { data: branches = [] } = useBranches();
+ const {data:productsData} = useGetItems({ search: ''});
+ const {data: suppliersData} = useParties('supplier');
+
+//  create purchase mutation
+const {mutate: createPurchase,isPending:isCreatingPurchases} = useCreatePurchases();
+const products = productsData?.data || [];
+const suppliers = suppliersData?.data || [];
+
+const user = useUser();
 
   const router = useRouter()
   // Set default branch
-  useEffect(() => {
-    if (branches.length > 0 && !branchId) {
-      const mainBranch = branches.find(b => b.isMain);
-      setBranchId(mainBranch?.id || branches[0].id);
-    }
-  }, [branches, branchId]);
+  // useEffect(() => {
+  //   if (branches.length > 0 && !branchId) {
+  //     const mainBranch = branches.find(b => b.isMain);
+  //     setBranchId(mainBranch?.id || branches[0].id);
+  //   }
+  // }, [branches, branchId]);
 
   // Calculate totals
   const subtotal = items.reduce((sum, item) => sum + item.total, 0);
   const total = subtotal;
   const dueAmount = total - parseFloat(paidAmount || '0');
-  const isCredit = paymentMethod === 'credit' || (paymentMethod === 'partial' && dueAmount > 0);
+  // const isCredit = paymentMethod === 'credit' || (paymentMethod === 'partial' && dueAmount > 0);
 
   // Add item to purchase
   const handleAddItem = () => {
@@ -128,56 +133,39 @@ export default function NewPurchasePage() {
   };
 
   // Submit purchase
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (items.length === 0) {
       toast.error(isBangla ? 'অন্তত একটি পণ্য যোগ করুন' : 'Add at least one item');
       return;
     }
 
-    if (!branchId) {
-      toast.error(isBangla ? 'শাখা নির্বাচন করুন' : 'Please select a branch');
-      return;
-    }
+    // if (!branchId) {
+    //   toast.error(isBangla ? 'শাখা নির্বাচন করুন' : 'Please select a branch');
+    //   return;
+    // }
 
-    setIsSubmitting(true);
+    const data = {
+                supplierId: supplierId === 'none' ? undefined : supplierId,
+                items: items.map(item => ({
+                  itemId: item.itemId,
+                  itemName: item.itemName,
+                  quantity: item.quantity,
+                  unitCost: item.unitCost,
+                  trackBatch:true
+                })),
+                paidAmount: parseFloat(paidAmount || '0'),
+                accountId: user?.id || '',
+                notes,
+              }
 
-    try {
-      const response = await fetch('/api/purchases', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-business-id': business?.id || '',
-          'x-branch-id': branchId,
-        },
-        body: JSON.stringify({
-          supplierId: supplierId === 'none' ? undefined : supplierId,
-          branchId,
-          items: items.map(item => ({
-            itemId: item.itemId,
-            itemName: item.itemName,
-            quantity: item.quantity,
-            unitCost: item.unitCost,
-          })),
-          paidAmount: parseFloat(paidAmount || '0'),
-          notes,
-        }),
-      });
 
-      const data = await response.json();
-
-      if (data.success) {
-        toast.success(isBangla ? 'ক্রয় সফলভাবে সম্পন্ন হয়েছে' : 'Purchase completed successfully');
-        navigateTo('purchases');
-      } else {
-        toast.error(data.error?.message || 'Failed to create purchase');
-      }
-    } catch (error) {
-      console.error('Error creating purchase:', error);
-      toast.error(isBangla ? 'ক্রয় তৈরি ব্যর্থ হয়েছে' : 'Failed to create purchase');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+              createPurchase(data,{
+                onSuccess: () => {
+                  toast.success(isBangla ? 'স্টক সফলভাবে যোগ করা হয়েছে' : 'Stock added successfully');
+                  router.push('/purchases');
+                }
+              })
+      };
 
   return (
     <div className="space-y-6">
@@ -228,7 +216,7 @@ export default function NewPurchasePage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
+                  {/* <div className="space-y-2">
                     <Label>{isBangla ? 'শাখা' : 'Branch'}</Label>
                     <Select value={branchId} onValueChange={setBranchId}>
                       <SelectTrigger>
@@ -243,7 +231,7 @@ export default function NewPurchasePage() {
                         ))}
                       </SelectContent>
                     </Select>
-                  </div>
+                  </div> */}
                 </div>
               </CardContent>
             </Card>
@@ -425,7 +413,7 @@ export default function NewPurchasePage() {
                   <button
                     onClick={() => {
                       setPaymentMethod('cash');
-                      setPaidAmount(total.toString());
+                   
                     }}
                     className={cn(
                       'flex flex-col items-center gap-2 p-3 rounded-lg border transition-all',
@@ -439,34 +427,44 @@ export default function NewPurchasePage() {
                   </button>
                   <button
                     onClick={() => {
-                      setPaymentMethod('credit');
-                      setPaidAmount('0');
+                      setPaymentMethod('bank');
                     }}
                     className={cn(
                       'flex flex-col items-center gap-2 p-3 rounded-lg border transition-all',
-                      paymentMethod === 'credit'
+                      paymentMethod === 'bank'
                         ? 'border-primary bg-primary/10 text-primary'
                         : 'border-border-subtle hover:border-primary/50'
                     )}
                   >
                     <CreditCard className="h-5 w-5" />
-                    <span className="text-xs font-medium">{isBangla ? 'বাকি' : 'Credit'}</span>
+                    <span className="text-xs font-medium">{isBangla ? 'ব্যাংক ট্রান্সফার' : 'Bank Transfer'}</span>
                   </button>
                   <button
-                    onClick={() => setPaymentMethod('partial')}
+                    onClick={() => setPaymentMethod('mobile_banking')}
                     className={cn(
                       'flex flex-col items-center gap-2 p-3 rounded-lg border transition-all',
-                      paymentMethod === 'partial'
+                      paymentMethod === 'mobile_banking'
                         ? 'border-primary bg-primary/10 text-primary'
                         : 'border-border-subtle hover:border-primary/50'
                     )}
                   >
                     <Wallet className="h-5 w-5" />
-                    <span className="text-xs font-medium">{isBangla ? 'আংশিক' : 'Partial'}</span>
+                    <span className="text-xs font-medium">{isBangla ? 'মোবাইল ব্যাংকিং' : 'Mobile Banking'}</span>
                   </button>
                 </div>
-
-                {paymentMethod === 'partial' && (
+ <div className="space-y-2">
+                    <Label>{isBangla ? 'পরিশোধিত পরিমাণ' : 'Paid Amount'}</Label>
+                    <Input
+                      type="number"
+                      value={paidAmount}
+                      onChange={(e) => setPaidAmount(e.target.value)}
+                      placeholder="0"
+                      min="0"
+                      max={total.toString()}
+                      step="0.01"
+                    />
+                  </div>
+                {/* {paymentMethod === 'partial' && (
                   <div className="space-y-2">
                     <Label>{isBangla ? 'পরিশোধিত পরিমাণ' : 'Paid Amount'}</Label>
                     <Input
@@ -479,9 +477,9 @@ export default function NewPurchasePage() {
                       step="0.01"
                     />
                   </div>
-                )}
+                )} */}
 
-                {isCredit && dueAmount > 0 && (
+                {dueAmount > 0 && (
                   <div className="p-3 rounded-lg bg-warning/10 border border-warning/20">
                     <div className="flex items-center gap-2 text-warning mb-1">
                       <AlertCircle className="h-4 w-4" />
@@ -496,7 +494,7 @@ export default function NewPurchasePage() {
                   </div>
                 )}
 
-                {paymentMethod === 'cash' && (
+                {parseFloat(paidAmount) === total && (
                   <div className="p-3 rounded-lg bg-emerald/10 border border-emerald/20">
                     <div className="flex items-center gap-2 text-emerald">
                       <CheckCircle className="h-4 w-4" />
@@ -527,9 +525,9 @@ export default function NewPurchasePage() {
             <Button
               className="w-full h-12 text-base"
               onClick={handleSubmit}
-              disabled={isSubmitting || items.length === 0}
+              disabled={isCreatingPurchases || items.length === 0}
             >
-              {isSubmitting ? (
+              {isCreatingPurchases ? (
                 <>
                   <Loader2 className="h-5 w-5 mr-2 animate-spin" />
                   {isBangla ? 'সংরক্ষণ হচ্ছে...' : 'Saving...'}

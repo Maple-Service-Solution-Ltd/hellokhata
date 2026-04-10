@@ -6,7 +6,7 @@ import {  useQuery } from "@tanstack/react-query";
 
 export const useGetBatches = (filters?: {
     search?: string;
-    status?: 'expired' | 'expiring' | 'active' | 'inactive';
+    status?: |'expired' | 'expiring' | 'active' | 'inactive' | undefined;
     branchId?: string;
     page?: number;
     limit?: number;

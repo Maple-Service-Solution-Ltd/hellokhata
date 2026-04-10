@@ -21,20 +21,17 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { useAppTranslation } from '@/hooks/useAppTranslation';
-import { useNavigation } from '@/stores/uiStore';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { useGetBatches, useGetBatchesStatus } from '@/hooks/api/useBatches';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Batch {
   id: string;
   batchNumber: string;
   itemId: string;
-  item?: {
-    name: string;
-    unit: string;
-  };
+  itemName?: string;
   quantity: number;
   costPrice: number;
   expiryDate?: string;
@@ -49,8 +46,11 @@ interface Batch {
 export default function BatchesPage() {
   const { t, isBangla } = useAppTranslation();
   const [searchQuery, setSearchQuery] = useState('');
-  const [filter, setFilter] = useState<'all' | 'expiring' | 'expired'>('all');
+const [filter, setFilter] = useState<
+   'expired' | 'expiring' | 'active' | 'inactive' | undefined
+>(undefined);
   const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null);
+
   // const [expiringSummary, setExpiringSummary] = useState<{
   //   expiringCount: number;
   //   expiredCount: number;
@@ -59,7 +59,9 @@ export default function BatchesPage() {
   // } | null>(null);
 
 const {data: batchesStatusData} = useGetBatchesStatus();
-const {data:batchesData, isLoading:isLoadingBatches} = useGetBatches()
+const {data:batchesData, isLoading:isLoadingBatches} = useGetBatches(
+ {search: searchQuery,status: filter }
+)
 const batchesStatus = batchesStatusData?.data;
 const batches = batchesData?.data || [];
   const router = useRouter();
@@ -235,28 +237,32 @@ const batches = batchesData?.data || [];
           </div>
           
           <div className="flex gap-2">
-            <Button 
-              variant={filter === 'all' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setFilter('all')}
-            >
-              {isBangla ? 'সব' : 'All'}
-            </Button>
-            <Button 
-              variant={filter === 'expiring' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setFilter('expiring')}
-              className="text-amber-700"
-            >
-              {isBangla ? 'শীঘ্রই মেয়াদ শেষ' : 'Expiring'}
-            </Button>
-            <Button 
-              variant={filter === 'expired' ? 'destructive' : 'outline'}
-              size="sm"
-              onClick={() => setFilter('expired')}
-            >
-              {isBangla ? 'মেয়াদোত্তীর্ণ' : 'Expired'}
-            </Button>
+             <Select value={filter} onValueChange={(value) => setFilter(value as any)}>
+  <SelectTrigger className="w-full md:w-[180px]">
+    <SelectValue placeholder={isBangla ? 'ধরন' : 'Type'} />
+  </SelectTrigger>
+
+  <SelectContent>
+    <SelectItem value=" ">
+      {isBangla ? 'সব' : 'All'}
+    </SelectItem>
+
+    <SelectItem value="expired">
+      {isBangla ? 'মেয়াদোত্তীর্ণ' : 'Expired'}
+    </SelectItem>
+
+    <SelectItem value="expiring">
+      {isBangla ? 'শীঘ্রই মেয়াদোত্তীর্ণ' : 'Expiring Soon'}
+    </SelectItem>
+
+    <SelectItem value="active">
+      {isBangla ? 'সক্রিয়' : 'Active'}
+    </SelectItem>
+     <SelectItem value="inactive">
+      {isBangla ? 'নিষ্ক্রিয়' : 'Inactive'}
+    </SelectItem>
+  </SelectContent>
+</Select>
           </div>
         </div>
       </div>
@@ -313,11 +319,23 @@ const batches = batchesData?.data || [];
                         <div className="flex items-center gap-2">
                           <h3 className="font-semibold">{batch.batchNumber}</h3>
                           {/*  {batches(batch)}  */}
-                          fsdfsdss
+                          {batch.isExpired ? (
+                            <Badge variant="destructive" size="sm">
+                              {isBangla ? 'মেয়াদোত্তীর্ণ' : 'Expired'}
+                            </Badge>
+                          ) : batch.isExpiringSoon ? (
+                            <Badge variant="warning" size="sm">
+                              {isBangla ? 'শীঘ্রই মেয়াদ শেষ' : 'Expiring Soon'}
+                            </Badge>
+                          ) : (
+                            <Badge variant="success" size="sm">
+                              {isBangla ? 'সক্রিয়' : 'Active'}
+                            </Badge>
+                          )}
                         </div>
                         
                         <p className="mt-1 text-sm text-muted-foreground">
-                          {batch.item?.name || 'Unknown Item'}
+                          {batch.itemName || 'Unknown Item'}
                         </p>
                         
                         <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
@@ -353,7 +371,7 @@ const batches = batchesData?.data || [];
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <Package className="h-5 w-5" />
-                {selectedBatch.batchNumber}
+                {selectedBatch?.batchNumber}
               </CardTitle>
               <Button 
                 variant="ghost" 
@@ -370,14 +388,14 @@ const batches = batchesData?.data || [];
                   <p className="text-sm text-muted-foreground">
                     {isBangla ? 'পণ্য' : 'Product'}
                   </p>
-                  <p className="font-medium">{selectedBatch.item?.name}</p>
+                  <p className="font-medium">{selectedBatch?.itemName}</p>
                 </div>
                 
                 <div>
                   <p className="text-sm text-muted-foreground">
                     {isBangla ? 'পরিমাণ' : 'Quantity'}
                   </p>
-                  <p className="font-medium">{selectedBatch.quantity} {selectedBatch.item?.unit}</p>
+                  <p className="font-medium">{selectedBatch.quantity} </p>
                 </div>
                 
                 <div>

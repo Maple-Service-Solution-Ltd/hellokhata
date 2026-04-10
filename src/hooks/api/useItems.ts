@@ -7,7 +7,7 @@ export const useCreateItem = () => {
     })
 };
 
-export const useGetItems = (filters: {
+export const useGetItems = (filters?: {
     search?: string;
     categoryId?: string;
     branchId?: string;
@@ -18,7 +18,8 @@ export const useGetItems = (filters: {
     return useQuery({
         queryKey: ['items', filters],
         queryFn: () => getItems(filters),
-        placeholderData: (previousData) => previousData
+        placeholderData: (previousData) => previousData,
+        // select: (data) => data.data
     });
 };
 

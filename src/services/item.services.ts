@@ -5,7 +5,7 @@ export const createItem = async (item: any) => {
     return res.data
 }
 
-export const getItems = async (params: {
+export const getItems = async (params?: {
     search?: string;
     categoryId?: string;
     branchId?: string;
