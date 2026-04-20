@@ -48,10 +48,10 @@ import {
   Sparkles,
   Camera,
 } from 'lucide-react';
-import { useExpenseCategories, useCreateExpense } from '@/hooks/queries';
 import { useAppTranslation } from '@/hooks/useAppTranslation';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useCreateExpense, useGetExpenseCategories, useUploadExpenseImage } from '@/hooks/api/useExpense';
 
 const categoryIcons: Record<string, React.ReactNode> = {
   'Zap': <Zap className="h-4 w-4" />,
@@ -74,11 +74,12 @@ interface UploadedFile {
 export default function NewExpensePage() {
   const router = useRouter();
   const { t, isBangla } = useAppTranslation();
-  const createExpense = useCreateExpense();
   
-  const { data: categoriesData } = useExpenseCategories();
+  const {mutate:createExpenseMutate,isPending: isLoading} = useCreateExpense();
+  const { data: categoriesData } = useGetExpenseCategories();
   const categories = categoriesData || [];
   
+
   // Get today's date in YYYY-MM-DD format
   const today = new Date();
   const todayStr = today.toISOString().split('T')[0];
@@ -91,6 +92,8 @@ export default function NewExpensePage() {
   });
   
   // File upload state
+  const {mutateAsync:uploadImage,isPending:isUploading} = useUploadExpenseImage();
+
   const [uploadedFile, setUploadedFile] = useState<UploadedFile | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
@@ -121,9 +124,9 @@ export default function NewExpensePage() {
       return;
     }
     
-    // Check file size (max 10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error(isBangla ? 'ফাইলের সাইজ ১০MB এর বেশি হতে পারবে না' : 'File size must be less than 10MB');
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(isBangla ? 'ফাইলের সাইজ ৫MB এর বেশি হতে পারবে না' : 'File size must be less than 5MB');
       return;
     }
     
@@ -194,21 +197,35 @@ export default function NewExpensePage() {
       return;
     }
     
-    try {
-      await createExpense.mutateAsync({
+    if(!uploadedFile?.file){
+      toast.error(isBangla ? 'বিল/রশিদ ফটো প্রয়োজন' : 'Bill/Receipt photo is required');
+      return;
+    }
+   
+  
+  uploadImage(uploadedFile?.file as File,{
+    onSuccess: res => {
+     if(res.url){
+       const expenseData = {
         categoryId: formData.categoryId || categories[0]?.id || 'ec-6',
+        accountId:'',
         amount: parseFloat(formData.amount),
         description: formData.description,
         date: new Date(formData.date),
-      });
-      
-      toast.success(isBangla ? 'খরচ সংরক্ষিত হয়েছে!' : 'Expense saved successfully!');
-      router.push('/expenses');
-    } catch (error) {
-      toast.error(isBangla ? 'খরচ সংরক্ষণে সমস্যা হয়েছে' : 'Failed to save expense');
-    }
+        receipt: res.url,
   };
 
+   createExpenseMutate(expenseData,{
+    onSuccess: () =>{
+      toast.success(isBangla ? 'খরচ সফলভাবে যোগ করা হয়েছে' : 'Expense added successfully');
+      router.push('/expenses');
+    }
+   })
+     }
+    },
+  })
+  }
+  
   return (
     <>
       {/* Centered Page Container */}
@@ -484,9 +501,9 @@ export default function NewExpensePage() {
               <Button
                 className="flex-1 h-11"
                 onClick={handleSubmit}
-                disabled={createExpense.isPending}
+                disabled={isLoading || isUploading}
               >
-                {createExpense.isPending ? (
+                {isUploading ? (
                   <span className="flex items-center gap-2">
                     <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
                     {isBangla ? 'সংরক্ষণ হচ্ছে...' : 'Saving...'}

@@ -19,7 +19,6 @@ export const getParty = async (id: string) => {
 
 export const deleteParty = async (id: string) => {
     const res = await client.delete(`/api/parties/${id}`);
-    console.log('partieData', res.data)
     return res.data;
 }
 

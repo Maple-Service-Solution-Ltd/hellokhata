@@ -29,18 +29,19 @@ import {
   Users,
   MoreHorizontal,
   Eye,
-  Edit,
-  MoreVertical,
+  
   DollarSign,
   FileText,
   Tag,
+  Router,
+  Edit,
 } from 'lucide-react';
-import { useExpenses, useExpenseCategories } from '@/hooks/queries';
 import { useCurrency, useDateFormat } from '@/hooks/useAppTranslation';
 import { useAppTranslation } from '@/hooks/useAppTranslation';
-import { cn } from '@/lib/utils';
 import { DetailModal, DetailRow, DetailSection } from '@/components/shared/DetailModal';
 import type { Expense } from '@/types';
+import { useExpenseSummary, useGetExpenseCategories, useGetExpenses } from '@/hooks/api/useExpense';
+import { useRouter } from 'next/navigation';
 
 const categoryIcons: Record<string, React.ReactNode> = {
   'Zap': <Zap className="h-5 w-5" />,
@@ -56,32 +57,13 @@ export default function ExpensesPage() {
   const { formatCurrency } = useCurrency();
   const { formatDate } = useDateFormat();
   const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('');
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
-
-  const { data: expenses = [], isLoading: expensesLoading } = useExpenses();
-  const { data: categories, isLoading: categoriesLoading } = useExpenseCategories();
-
-  // Filter expenses
-  const filteredExpenses = expenses.filter((expense) => {
-    const matchesSearch = expense.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = categoryFilter === 'all' || expense.categoryId === categoryFilter;
-    return matchesSearch && matchesCategory;
-  });
-
-  // Calculate stats
-  const todayTotal = expenses
-    .filter((e) => new Date(e.date).toDateString() === new Date().toDateString())
-    .reduce((sum, e) => sum + e.amount, 0);
-  const thisMonthTotal = expenses
-    .filter((e) => {
-      const expenseDate = new Date(e.date);
-      const now = new Date();
-      return expenseDate.getMonth() === now.getMonth() && expenseDate.getFullYear() === now.getFullYear();
-    })
-    .reduce((sum, e) => sum + e.amount, 0);
-  const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
-
+  
+  const router = useRouter();
+  const { data: expenses = [], isLoading: expensesLoading } = useGetExpenses({search: searchTerm, categoryId: categoryFilter});
+  const { data: categories } = useGetExpenseCategories();
+  const {data: expenseSummary} = useExpenseSummary();
   return (
     <>
     <div className="space-y-6">
@@ -91,7 +73,7 @@ export default function ExpensesPage() {
           icon={Receipt}
           action={{
             label: t('expenses.newExpense'),
-            onClick: () => window.location.href = '/expenses/new',
+            onClick: () => router.push('/expenses/new'),
             icon: Plus,
           }}
         />
@@ -100,25 +82,25 @@ export default function ExpensesPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <StatCard
             title={isBangla ? 'আজকের খরচ' : "Today's Expenses"}
-            value={formatCurrency(todayTotal)}
+            value={formatCurrency(expenseSummary?.today?.total || 0)}
             icon={Receipt}
             iconColor="text-orange-600"
           />
           <StatCard
             title={isBangla ? 'এই মাসের খরচ' : 'This Month'}
-            value={formatCurrency(thisMonthTotal)}
+            value={formatCurrency(expenseSummary?.thisMonth?.total || 0)}
             icon={Calendar}
             iconColor="text-blue-600"
           />
           <StatCard
             title={isBangla ? 'মোট খরচ' : 'Total Expenses'}
-            value={formatCurrency(totalExpenses)}
+            value={formatCurrency(expenseSummary?.allTime?.total || 0)}
             icon={Receipt}
             iconColor="text-purple-600"
           />
           <StatCard
             title={isBangla ? 'ক্যাটাগরি' : 'Categories'}
-            value={categories?.length.toString() || '0'}
+            value={expenseSummary?.categories?.length.toString() || '0'}
             icon={MoreHorizontal}
             iconColor="text-emerald-600"
           />
@@ -137,9 +119,9 @@ export default function ExpensesPage() {
                   className="pl-9"
                 />
               </div>
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <Select value={categoryFilter} onValueChange={(value) => setCategoryFilter(value === 'all' ? '' : value )}>
                 <SelectTrigger className="w-full md:w-[180px]">
-                  <SelectValue placeholder={isBangla ? 'ক্যাটাগরি' : 'Category'} />
+                  <SelectValue className='text-white' placeholder={isBangla ? 'ক্যাটাগরি' : 'Category'} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{isBangla ? 'সব ক্যাটাগরি' : 'All Categories'}</SelectItem>
@@ -164,21 +146,21 @@ export default function ExpensesPage() {
               <div className="flex items-center justify-center h-48">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
               </div>
-            ) : filteredExpenses.length === 0 ? (
+            ) : expenses.length === 0 ? (
               <EmptyState
                 icon={Receipt}
                 title={isBangla ? 'কোনো খরচ নেই' : 'No expenses found'}
                 description={isBangla ? 'নতুন খরচ যোগ করুন' : 'Add your first expense'}
                 action={{
                   label: t('expenses.newExpense'),
-                  onClick: () => window.location.href = '/expenses/new',
+                  onClick: () => router.push('/expenses/new'),
                   icon: Plus,
                 }}
               />
             ) : (
               <ScrollArea className="h-[500px] pr-4">
                 <div className="space-y-3">
-                  {filteredExpenses.map((expense) => {
+                  {expenses.map((expense) => {
                     const category = categories?.find((c) => c.id === expense.categoryId);
                     return (
                       <ExpenseCard
@@ -247,9 +229,7 @@ export default function ExpensesPage() {
             <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-800">
               <Button 
                 className="flex-1"
-                onClick={() => {
-                  window.location.href = `/expenses/${selectedExpense.id}/edit`;
-                }}
+                onClick={() => router.push(`/expenses/${selectedExpense.id}/edit`)}
               >
                 <Edit className="h-4 w-4 mr-2" />
                 {isBangla ? 'সম্পাদনা' : 'Edit'}
@@ -286,7 +266,7 @@ function ExpenseCard({
   const { isBangla } = useAppTranslation();
   const { formatCurrency } = useCurrency();
   const { formatDate } = useDateFormat();
-
+  const router = useRouter();
   return (
     <div className="flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-800 hover:border-orange-200 dark:hover:border-orange-800 transition-colors gap-4">
       <div className="flex items-center gap-4 min-w-0 flex-1">
@@ -317,7 +297,7 @@ function ExpenseCard({
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onView}>
             <Eye className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8">
+          <Button onClick={() => router.push(`/expenses/${expense.id}/edit`)} variant="ghost" size="icon" className="h-8 w-8">
             <Edit className="h-4 w-4" />
           </Button>
         </div>

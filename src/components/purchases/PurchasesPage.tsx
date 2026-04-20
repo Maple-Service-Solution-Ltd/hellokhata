@@ -99,7 +99,7 @@ export default function PurchasesPage() {
     queryFn: fetchPurchaseOrders,
   });
 
-  console.log(purchases)
+  console.log('purchases',purchases)
   const router = useRouter()
   const isLoading = purchasesLoading || ordersLoading;
 
@@ -372,7 +372,7 @@ export default function PurchasesPage() {
       </div>
 
       {/* Purchase Detail Modal */}
-      <DetailModal
+      {/* <DetailModal
         isOpen={!!selectedPurchase}
         onClose={() => setSelectedPurchase(null)}
         title={selectedPurchase?.invoiceNo || ''}
@@ -429,8 +429,84 @@ export default function PurchasesPage() {
             </DetailSection>
           </>
         )}
-      </DetailModal>
-
+      </DetailModal> */}
+<DetailModal
+  isOpen={!!selectedPurchase}
+  onClose={() => setSelectedPurchase(null)}
+  title={selectedPurchase?.grnNo || ''}
+  subtitle={isBangla ? 'ক্রয়ের বিবরণ' : 'Purchase Details'}
+  width="lg"
+>
+  {selectedPurchase && (
+    <>
+      <DetailSection title={isBangla ? 'ক্রয়ের তথ্য' : 'Purchase Information'}>
+        <DetailRow
+          label={isBangla ? 'মোট পরিমাণ' : 'Total Amount'}
+          value={
+            <span className="text-base font-medium text-warning">
+              {formatCurrency(selectedPurchase.total)}
+            </span>
+          }
+          icon={<DollarSign className="h-4 w-4 text-warning" />}
+        />
+        <DetailRow
+          label={isBangla ? 'তারিখ ও সময়' : 'Date & Time'}
+          value={new Date(selectedPurchase.createdAt).toLocaleString()}
+          icon={<Clock className="h-4 w-4 text-blue-500" />}
+        />
+        {selectedPurchase.dueAmount > 0 && (
+          <DetailRow
+            label={isBangla ? 'বাকি' : 'Due Amount'}
+            value={
+              <span className="font-medium text-destructive">
+                {formatCurrency(selectedPurchase.dueAmount)}
+              </span>
+            }
+            icon={<TrendingDown className="h-4 w-4 text-destructive" />}
+          />
+        )}
+      </DetailSection>
+<DetailSection title={isBangla ? 'সরবরাহকারী' : 'Supplier'}>
+  <div className="flex items-center gap-2.5">
+    <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-950 flex items-center justify-center shrink-0">
+      <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
+        {selectedPurchase?.supplier.name.slice(0, 2).toUpperCase()}
+      </span>
+    </div>
+    <div>
+      <p className="text-sm font-medium text-foreground">{selectedPurchase?.supplier.name}</p>
+      {selectedPurchase?.supplier.phone && (
+        <p className="text-xs text-muted-foreground">{selectedPurchase?.supplier.phone}</p>
+      )}
+    </div>
+  </div>
+</DetailSection>
+      <DetailSection title={isBangla ? 'পণ্য তালিকা' : 'Items'}>
+        {selectedPurchase?.items.map((item, idx) => (
+          <div
+            key={idx}
+            className="flex items-center justify-between px-3 py-2.5 rounded-md bg-muted/50 gap-4"
+          >
+            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+              <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center shrink-0">
+                <Package className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-foreground truncate">{item.itemName}</p>
+                <p className="text-xs text-muted-foreground whitespace-nowrap">
+                  {item.quantity} × {formatCurrency(item.unitCost)}
+                </p>
+              </div>
+            </div>
+            <p className="text-sm font-medium text-foreground shrink-0">
+              {formatCurrency(item.total)}
+            </p>
+          </div>
+        ))}
+      </DetailSection>
+    </>
+  )}
+</DetailModal>
       {/* Order Detail Modal */}
       <DetailModal
         isOpen={!!selectedPO}

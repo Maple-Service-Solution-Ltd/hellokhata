@@ -32,7 +32,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { useAppTranslation } from '@/hooks/useAppTranslation';
-import { useSessionStore } from '@/stores/sessionStore';
+import { useSessionStore, useUser } from '@/stores/sessionStore';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import {
@@ -46,6 +46,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { useGetExpenseById, useGetExpenseCategories, useUpdateExpense } from '@/hooks/api/useExpense';
 
 const categoryIcons: Record<string, React.ReactNode> = {
   'Zap': <Zap className="h-4 w-4" />,
@@ -56,93 +57,33 @@ const categoryIcons: Record<string, React.ReactNode> = {
   'MoreHorizontal': <MoreHorizontal className="h-4 w-4" />,
 };
 
-interface ExpenseData {
-  id: string;
-  amount: number;
-  description: string;
-  date: Date;
-  categoryId: string | null;
-  category: { id: string; name: string; nameBn: string | null; icon: string | null; color: string | null } | null;
-  receipt: string | null;
-}
-
 interface EditExpensePageProps {
   params: Promise<{ id: string }>;
 }
 
 export default function EditExpensePage({ params }: EditExpensePageProps) {
   const { id } = use(params);
+  console.log('Editing expense with ID:', id);
   const router = useRouter();
   const { isBangla } = useAppTranslation();
-  const businessId = useSessionStore((s) => s.business?.id);
 
-  const [expense, setExpense] = useState<ExpenseData | null>(null);
-  const [categories, setCategories] = useState<Array<{ id: string; name: string; nameBn: string | null; icon: string | null; color: string | null }>>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
+  // Expense data
+  const {data:expense,isLoading:expenseLoading} = useGetExpenseById(id);
+  const {data:categories,isLoading:categoriesLoading} = useGetExpenseCategories();
+  const {mutate: updateExpense, isPending: isUpdating} = useUpdateExpense();
+  const user = useUser()
+
   // Form state
   const [formData, setFormData] = useState({
-    categoryId: '__none__',
-    amount: '',
-    description: '',
-    date: '',
+    categoryId:  '__none__',
+    amount:  '',
+    description:  '',
+    date:  '',
   });
 
-  // Fetch expense and categories
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!businessId) return;
-
-      setIsLoading(true);
-      try {
-        // Fetch expense
-        const expenseResponse = await fetch(`/api/expenses/${id}`, {
-          headers: {
-            'x-business-id': businessId,
-          },
-        });
-
-        const expenseData = await expenseResponse.json();
-
-        if (expenseData.success) {
-          setExpense(expenseData.data);
-          const exp = expenseData.data;
-          const dateStr = new Date(exp.date).toISOString().split('T')[0];
-          setFormData({
-            categoryId: exp.categoryId || '__none__',
-            amount: exp.amount.toString(),
-            description: exp.description || '',
-            date: dateStr,
-          });
-        } else {
-          toast.error(isBangla ? 'খরচ পাওয়া যায়নি' : 'Expense not found');
-          router.push('/expenses');
-        }
-
-        // Fetch categories
-        const categoriesResponse = await fetch('/api/expenses/categories', {
-          headers: {
-            'x-business-id': businessId,
-          },
-        });
-
-        const categoriesData = await categoriesResponse.json();
-        if (categoriesData.success) {
-          setCategories(categoriesData.data || []);
-        }
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        toast.error(isBangla ? 'ডেটা লোড করতে সমস্যা হয়েছে' : 'Failed to load data');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [id, businessId, isBangla, router]);
 
   const handleSubmit = async () => {
     if (!formData.amount || parseFloat(formData.amount) <= 0) {
@@ -155,64 +96,41 @@ export default function EditExpensePage({ params }: EditExpensePageProps) {
       return;
     }
 
-    setIsSaving(true);
-    try {
-      const response = await fetch(`/api/expenses/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-business-id': businessId || '',
-        },
-        body: JSON.stringify({
+    const expenseData = {
           categoryId: formData.categoryId === '__none__' ? null : formData.categoryId,
           amount: parseFloat(formData.amount),
           description: formData.description,
           date: formData.date,
-        }),
-      });
+          accountId:user?.id ,
+          branchId: user?.branchId,
+        }
 
-      const data = await response.json();
-
-      if (data.success) {
-        toast.success(isBangla ? 'খরচ আপডেট হয়েছে!' : 'Expense updated successfully!');
+    updateExpense({expenseId: id, expenseData}, {
+      onSuccess: () => {
+        toast.success(isBangla ? 'খরচ আপডেট হয়েছে' : 'Expense updated successfully');
         router.push('/expenses');
-      } else {
-        throw new Error(data.error?.message || 'Failed to update expense');
-      }
-    } catch (error) {
-      toast.error(isBangla ? 'খরচ আপডেট করতে সমস্যা হয়েছে' : 'Failed to update expense');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
+      }});
+  }
   const handleDelete = async () => {
-    setIsDeleting(true);
-    try {
-      const response = await fetch(`/api/expenses/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'x-business-id': businessId || '',
-        },
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        toast.success(isBangla ? 'খরচ মুছে ফেলা হয়েছে!' : 'Expense deleted successfully!');
-        router.push('/expenses');
-      } else {
-        throw new Error(data.error?.message || 'Failed to delete expense');
-      }
-    } catch (error) {
-      toast.error(isBangla ? 'খরচ মুছতে সমস্যা হয়েছে' : 'Failed to delete expense');
-    } finally {
-      setIsDeleting(false);
-      setShowDeleteDialog(false);
-    }
+  // delete api here
   };
 
-  if (isLoading) {
+
+useEffect(() => {
+  if (!expense) return;
+
+  setFormData({
+    categoryId: expense.categoryId ?? "__none__",
+    amount: String(expense.amount ?? ""),
+    description: expense.description ?? "",
+    date: expense.date
+      ? new Date(expense.date).toISOString().split("T")[0]
+      : "",
+  });
+
+}, [expense?.id]);
+
+  if (expenseLoading || categoriesLoading) {
     return (
       
         <div className="flex items-center justify-center h-[60vh]">
@@ -398,12 +316,12 @@ export default function EditExpensePage({ params }: EditExpensePageProps) {
               <Button
                 className="flex-1 h-11"
                 onClick={handleSubmit}
-                disabled={isSaving}
+                disabled={isUpdating}
               >
-                {isSaving ? (
+                {isUpdating ? (
                   <span className="flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    {isBangla ? 'সংরক্ষণ হচ্ছে...' : 'Saving...'}
+                    {isBangla ? 'আপডেট হচ্ছে...' : 'Updating...'}
                   </span>
                 ) : (
                   <>

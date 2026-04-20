@@ -151,7 +151,9 @@ const user = useUser();
                   itemName: item.itemName,
                   quantity: item.quantity,
                   unitCost: item.unitCost,
-                  trackBatch:true
+                  trackBatch:true,
+                  expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(), // default 1 year expiry
+                  manufactureDate: new Date().toISOString(), // default to today
                 })),
                 paidAmount: parseFloat(paidAmount || '0'),
                 accountId: user?.id || '',
