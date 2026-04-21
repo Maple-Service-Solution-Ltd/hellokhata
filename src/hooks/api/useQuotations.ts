@@ -1,16 +1,15 @@
 
 import { createQuotation, deleteQuotation, getQuotations, getQuotationSummary } from "@/services/quotations.services"
-import { QueryClient, useMutation, useQuery } from "@tanstack/react-query"
+import { QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 
 
 export const useCreateQuotation = () => {
-    const queryClient = new QueryClient();
+    const queryClient = useQueryClient();
     return useMutation({
         mutationFn: createQuotation,
         onSuccess: () => {
-            // Invalidate or refetch queries related to quotations if needed
-              queryClient.invalidateQueries({ queryKey: ['quotations'] });
+              queryClient.invalidateQueries({ queryKey: ['quotations','summary'] });
         }
     })
 }
@@ -32,7 +31,7 @@ export const useGetQoutationSummary = () => {
 
 
 export const useDeleteQuotation = () => {
-    const queryClient = new QueryClient();
+    const queryClient = useQueryClient();
     return useMutation({
         mutationFn: deleteQuotation,
         onSuccess: () => {

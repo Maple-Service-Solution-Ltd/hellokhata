@@ -11,6 +11,17 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -35,13 +46,17 @@ import {
   Tag,
   Router,
   Edit,
+  Loader2,
+  Trash2,
 } from 'lucide-react';
 import { useCurrency, useDateFormat } from '@/hooks/useAppTranslation';
 import { useAppTranslation } from '@/hooks/useAppTranslation';
 import { DetailModal, DetailRow, DetailSection } from '@/components/shared/DetailModal';
 import type { Expense } from '@/types';
-import { useExpenseSummary, useGetExpenseCategories, useGetExpenses } from '@/hooks/api/useExpense';
+import { useDeletExpense, useExpenseSummary, useGetExpenseCategories, useGetExpenses } from '@/hooks/api/useExpense';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import { QueryClient } from '@tanstack/react-query';
 
 const categoryIcons: Record<string, React.ReactNode> = {
   'Zap': <Zap className="h-5 w-5" />,
@@ -53,17 +68,18 @@ const categoryIcons: Record<string, React.ReactNode> = {
 };
 
 export default function ExpensesPage() {
+  
   const { t, isBangla } = useAppTranslation();
   const { formatCurrency } = useCurrency();
   const { formatDate } = useDateFormat();
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('');
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
-  
   const router = useRouter();
   const { data: expenses = [], isLoading: expensesLoading } = useGetExpenses({search: searchTerm, categoryId: categoryFilter});
   const { data: categories } = useGetExpenseCategories();
   const {data: expenseSummary} = useExpenseSummary();
+ 
   return (
     <>
     <div className="space-y-6">
@@ -267,6 +283,20 @@ function ExpenseCard({
   const { formatCurrency } = useCurrency();
   const { formatDate } = useDateFormat();
   const router = useRouter();
+//  const queryClient = new QueryClient()
+   const {mutate:deleteExpense, isPaused:isDeleting} = useDeletExpense();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+   const handleDelete = (id) => {
+    deleteExpense(id,{
+      onSuccess: data => {
+        if(data.success){
+          toast.success(isBangla ? 'খরচ ডিলিট হয়েছে' : 'Expense deleted successfully');
+        //  queryClient.invalidateQueries({ queryKey: ['expenses'] });
+        }
+      }
+    })
+  };
   return (
     <div className="flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-800 hover:border-orange-200 dark:hover:border-orange-800 transition-colors gap-4">
       <div className="flex items-center gap-4 min-w-0 flex-1">
@@ -300,6 +330,40 @@ function ExpenseCard({
           <Button onClick={() => router.push(`/expenses/${expense.id}/edit`)} variant="ghost" size="icon" className="h-8 w-8">
             <Edit className="h-4 w-4" />
           </Button>
+
+           <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                          <button className='text-red-500'>
+                            <AlertDialogTrigger asChild>
+                          
+                              <Trash2 className="h-4 w-4 mr-2" />
+                           
+                          </AlertDialogTrigger>
+                          </button>
+                          <AlertDialogContent className='max-w-[350px]'>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>{isBangla ? 'খরচ মুছবেন?' : 'Delete Expense?'}</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                {isBangla
+                                  ? 'এই কাজ পূর্বাবস্থায় ফেরানো যাবে না। খরচটি স্থায়ীভাবে মুছে ফেলা হবে।'
+                                  : 'This action cannot be undone. This expense will be permanently deleted.'}
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>{isBangla ? 'বাতিল' : 'Cancel'}</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDelete(expense.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                {isDeleting ? (
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                ) : (
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                )}
+                                {isBangla ? 'মুছুন' : 'Delete'}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
         </div>
       </div>
     </div>

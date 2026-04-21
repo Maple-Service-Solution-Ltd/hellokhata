@@ -1,6 +1,6 @@
-import { createExpense, getExpenseById, getExpenseCategories, getExpenses, getExpenseSummary, updateExpense, uploadExpenseImage } from "@/services/expense.services"
-import { QueryClient, useMutation, useQuery } from "@tanstack/react-query"
-import { create } from "zustand";
+import { createExpense, deleteExpense, getExpenseById, getExpenseCategories, getExpenses, getExpenseSummary, updateExpense, uploadExpenseImage } from "@/services/expense.services"
+import { QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+
 
 export const useExpenseSummary = () => {
    return useQuery({
@@ -25,12 +25,6 @@ export const useGetExpenseCategories = () => {
 }
 
 
-export const useCreateExpense = () => {
-   return useMutation({
-    mutationFn: createExpense,
-   
-   })
-}
 
 export const useGetExpenses = (filter: {search?: string, categoryId?: string}) => {
   return useQuery({
@@ -48,13 +42,36 @@ export const useGetExpenseById = (expenseId: string) => {
   })
 }
 
+export const useCreateExpense = () => {
+  const queryClient = useQueryClient()
+   return useMutation({
+    mutationFn: createExpense,
+   onSuccess: () => {      
+    queryClient.invalidateQueries({ queryKey: ['expenses']});
+    queryClient.invalidateQueries({ queryKey: ['expenseSummary']});
+    }
+   })
+}
 
 export const useUpdateExpense = () =>{
-  const queryClient =  new QueryClient()
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: updateExpense,
     onSuccess: () => {      
-    queryClient.invalidateQueries({ queryKey: ['expenses'] })
+    queryClient.invalidateQueries({ queryKey: ['expenses']});
+    queryClient.invalidateQueries({ queryKey: ['expenseSummary']});
+    }
+  })
+}
+
+
+export const useDeletExpense = () =>{
+   const queryClient =  useQueryClient()
+  return useMutation({
+  mutationFn: deleteExpense,
+   onSuccess: () => {      
+    queryClient.invalidateQueries({ queryKey: ['expenses']});
+    queryClient.invalidateQueries({ queryKey: ['expenseSummary']});
     }
   })
 }

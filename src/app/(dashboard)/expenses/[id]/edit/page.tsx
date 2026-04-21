@@ -46,7 +46,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { useGetExpenseById, useGetExpenseCategories, useUpdateExpense } from '@/hooks/api/useExpense';
+import { useDeletExpense, useGetExpenseById, useGetExpenseCategories, useUpdateExpense } from '@/hooks/api/useExpense';
 
 const categoryIcons: Record<string, React.ReactNode> = {
   'Zap': <Zap className="h-4 w-4" />,
@@ -66,14 +66,13 @@ export default function EditExpensePage({ params }: EditExpensePageProps) {
   console.log('Editing expense with ID:', id);
   const router = useRouter();
   const { isBangla } = useAppTranslation();
-
-  const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   // Expense data
   const {data:expense,isLoading:expenseLoading} = useGetExpenseById(id);
   const {data:categories,isLoading:categoriesLoading} = useGetExpenseCategories();
   const {mutate: updateExpense, isPending: isUpdating} = useUpdateExpense();
+  const {mutate:deleteExpense, isPaused:isDeleting} = useDeletExpense()
   const user = useUser()
 
   // Form state
@@ -111,8 +110,15 @@ export default function EditExpensePage({ params }: EditExpensePageProps) {
         router.push('/expenses');
       }});
   }
-  const handleDelete = async () => {
-  // delete api here
+  const handleDelete = () => {
+    deleteExpense(id,{
+      onSuccess: data => {
+        if(data.success){
+          toast.success(isBangla ? 'খরচ ডিলিট হয়েছে' : 'Expense deleted successfully');
+        router.push('/expenses');
+        }
+      }
+    })
   };
 
 
@@ -190,7 +196,7 @@ useEffect(() => {
                     {isBangla ? 'মুছুন' : 'Delete'}
                   </Button>
                 </AlertDialogTrigger>
-                <AlertDialogContent>
+                <AlertDialogContent className='max-w-[350px]'>
                   <AlertDialogHeader>
                     <AlertDialogTitle>{isBangla ? 'খরচ মুছবেন?' : 'Delete Expense?'}</AlertDialogTitle>
                     <AlertDialogDescription>
