@@ -244,14 +244,7 @@ export default function QuotationsPage() {
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
             ) 
-            // : 
-            // error ? (
-            //   <div className="flex items-center justify-center py-12">
-            //     <p className="text-destructive">
-            //       {isBangla ? 'ডেটা লোড করতে সমস্যা হয়েছে' : 'Failed to load quotations'}
-            //     </p>
-            //   </div>
-            // ) 
+
             : filteredQuotations.length === 0 ? (
               <EmptyState
                 icon={<FileText className="h-8 w-8" />}

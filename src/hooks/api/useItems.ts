@@ -1,5 +1,5 @@
 import { createItem, deleteItem, getItems, getItemsCategories, getItemsStatus, getSingleItem, transferItem, updateItem } from "@/services/item.services"
-import { useMutation, useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 export const useCreateItem = () => {
     return useMutation({
@@ -31,6 +31,13 @@ export const useGetSingleItem = (id: string) => {
     });
 }
 
+export const useGetItemsStatus = () => {
+    return useQuery({
+        queryKey: ['itemsStatus'],
+        queryFn: getItemsStatus,
+    });
+};
+
 export const useGetItemsCategories = () => {
     return useQuery({
         queryKey: ['itemsCategory'],
@@ -39,13 +46,23 @@ export const useGetItemsCategories = () => {
 }
 
 export const useUpdateItem = () => {
+    const queryClient = useQueryClient()
     return useMutation({
-        mutationFn: updateItem
+        mutationFn: updateItem,
+        onSuccess: ()=>  {
+            queryClient.invalidateQueries({queryKey:['items']})
+            queryClient.invalidateQueries({queryKey:['itemsStatus']})
+        }
     })
 }
 export const useDeleteItem = () => {
+     const queryClient = useQueryClient()
     return useMutation({
-        mutationFn: deleteItem
+        mutationFn: deleteItem,
+        onSuccess: ()=>  {
+            queryClient.invalidateQueries({queryKey:['items']})
+            queryClient.invalidateQueries({queryKey:['itemsStatus']})
+        }
     })
 }
 
@@ -56,9 +73,3 @@ export const useTransferItem = () => {
     })
 }
 
-export const useGetItemsStatus = () => {
-    return useQuery({
-        queryKey: ['itemsStatus'],
-        queryFn: getItemsStatus,
-    });
-};

@@ -1,18 +1,6 @@
 
 import { createQuotation, deleteQuotation, getQuotations, getQuotationSummary } from "@/services/quotations.services"
-import { QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-
-
-
-export const useCreateQuotation = () => {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: createQuotation,
-        onSuccess: () => {
-              queryClient.invalidateQueries({ queryKey: ['quotations','summary'] });
-        }
-    })
-}
+import {  useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 export const useGetQuotations = (search:string) => {
     return useQuery({
@@ -21,21 +9,31 @@ export const useGetQuotations = (search:string) => {
     })
 }   
 
-
 export const useGetQoutationSummary = () => {
     return useQuery({
-        queryKey: ['quotations', 'summary'],
+        queryKey: [ 'qoutationSummary'],
         queryFn: getQuotationSummary
     })
 }
 
+export const useCreateQuotation = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: createQuotation,
+        onSuccess: () => {
+              queryClient.invalidateQueries({ queryKey: ['quotations'] });
+              queryClient.invalidateQueries({ queryKey: ['qoutationSummary'] });
+        }
+    })
+}
 
 export const useDeleteQuotation = () => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: deleteQuotation,
         onSuccess: () => {
-              queryClient.invalidateQueries({ queryKey: ['quotations', 'summary'] });
+              queryClient.invalidateQueries({ queryKey: ['quotations'] });
+                queryClient.invalidateQueries({ queryKey: ['qoutationSummary'] });
         }
     })
 }
