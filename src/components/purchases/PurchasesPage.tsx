@@ -35,6 +35,7 @@ import {
   Building,
   CreditCard,
   Store,
+  RotateCcw,
 } from 'lucide-react';
 import { usePurchases } from '@/hooks/queries';
 import { useCurrency, useDateFormat } from '@/hooks/useAppTranslation';
@@ -47,6 +48,7 @@ import type { Purchase } from '@/types';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useGetPurchases } from '@/hooks/api/usePurchases';
+import { toast } from 'sonner';
 
 // Purchase Order interface
 interface PurchaseOrderItem {
@@ -92,6 +94,8 @@ export default function PurchasesPage() {
   const [activeTab, setActiveTab] = useState<'purchases' | 'orders'>('purchases');
   const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null);
   const [selectedPO, setSelectedPO] = useState<PurchaseOrder | null>(null);
+   const [isOpenDetail,setIsOpenDetail] = useState(false);
+ const [isOpenRetrun,setIsOpenReturn] = useState(false);
 
   const { data: purchases = [], isLoading: purchasesLoading } = useGetPurchases();
   const { data: orders = [], isLoading: ordersLoading } = useQuery({
@@ -99,10 +103,15 @@ export default function PurchasesPage() {
     queryFn: fetchPurchaseOrders,
   });
 
-  console.log('purchases',purchases)
   const router = useRouter()
   const isLoading = purchasesLoading || ordersLoading;
 
+  const [returnForm, setReturnForm] = useState<ReturnForm>({
+    reason: '',
+    notes: '',
+    refundMethod: 'cash',
+  });
+  
   // Calculate purchase stats
   const totalPurchases = purchases.reduce((sum, p) => sum + p.total, 0);
   const now = new Date();
@@ -135,6 +144,21 @@ export default function PurchasesPage() {
     return matchesSearch && matchesStatus;
   });
 
+ const handleChange = (field: string, value: string) => {
+  setReturnForm((prev) => ({
+    ...prev,
+    [field]: value,
+  }));
+};
+    const handleSubmitReturn = () => {
+  if (!returnForm.reason || !returnForm.refundMethod) {
+    console.log(returnForm)
+    toast.error(isBangla ? 'সব তথ্য দিন' : 'Please fill required fields');
+    return;
+  }
+
+  toast.success(isBangla ? 'রিটার্ন সফল' : 'Return processed successfully');
+};
 
   return (
     <>
@@ -242,7 +266,7 @@ export default function PurchasesPage() {
                 </Button>
               </div>
             </Card>
-            
+
             <Card variant="elevated" padding="none">
               <CardHeader className="px-6 pt-6 pb-3">
                 <CardTitle className="text-base whitespace-nowrap">
@@ -277,7 +301,8 @@ export default function PurchasesPage() {
                           purchase={purchase}
                           isBangla={isBangla}
                           index={index}
-                          onView={() => setSelectedPurchase(purchase)}
+                          onView={() => {setSelectedPurchase(purchase); setIsOpenDetail(prev => !prev)}}
+                          onReturn={() => {setSelectedPurchase(purchase); setIsOpenReturn(prev => !prev)}}
                         />
                       ))}
                     </div>
@@ -320,7 +345,7 @@ export default function PurchasesPage() {
                 </Button>
               </div>
             </Card>
-            
+
             <Card variant="elevated" padding="none">
               <CardHeader className="px-6 pt-6 pb-3 flex flex-row items-center justify-between">
                 <CardTitle className="text-base">
@@ -430,83 +455,83 @@ export default function PurchasesPage() {
           </>
         )}
       </DetailModal> */}
-<DetailModal
-  isOpen={!!selectedPurchase}
-  onClose={() => setSelectedPurchase(null)}
-  title={selectedPurchase?.grnNo || ''}
-  subtitle={isBangla ? 'ক্রয়ের বিবরণ' : 'Purchase Details'}
-  width="lg"
->
-  {selectedPurchase && (
-    <>
-      <DetailSection title={isBangla ? 'ক্রয়ের তথ্য' : 'Purchase Information'}>
-        <DetailRow
-          label={isBangla ? 'মোট পরিমাণ' : 'Total Amount'}
-          value={
-            <span className="text-base font-medium text-warning">
-              {formatCurrency(selectedPurchase.total)}
-            </span>
-          }
-          icon={<DollarSign className="h-4 w-4 text-warning" />}
-        />
-        <DetailRow
-          label={isBangla ? 'তারিখ ও সময়' : 'Date & Time'}
-          value={new Date(selectedPurchase.createdAt).toLocaleString()}
-          icon={<Clock className="h-4 w-4 text-blue-500" />}
-        />
-        {selectedPurchase.dueAmount > 0 && (
-          <DetailRow
-            label={isBangla ? 'বাকি' : 'Due Amount'}
-            value={
-              <span className="font-medium text-destructive">
-                {formatCurrency(selectedPurchase.dueAmount)}
-              </span>
-            }
-            icon={<TrendingDown className="h-4 w-4 text-destructive" />}
-          />
+      <DetailModal
+        isOpen={!!isOpenDetail}
+        onClose={() => setIsOpenDetail(false)}
+        title={selectedPurchase?.grnNo || ''}
+        subtitle={isBangla ? 'ক্রয়ের বিবরণ' : 'Purchase Details'}
+        width="lg"
+      >
+        {selectedPurchase && (
+          <>
+            <DetailSection title={isBangla ? 'ক্রয়ের তথ্য' : 'Purchase Information'}>
+              <DetailRow
+                label={isBangla ? 'মোট পরিমাণ' : 'Total Amount'}
+                value={
+                  <span className="text-base font-medium text-warning">
+                    {formatCurrency(selectedPurchase.total)}
+                  </span>
+                }
+                icon={<DollarSign className="h-4 w-4 text-warning" />}
+              />
+              <DetailRow
+                label={isBangla ? 'তারিখ ও সময়' : 'Date & Time'}
+                value={new Date(selectedPurchase.createdAt).toLocaleString()}
+                icon={<Clock className="h-4 w-4 text-blue-500" />}
+              />
+              {selectedPurchase.dueAmount > 0 && (
+                <DetailRow
+                  label={isBangla ? 'বাকি' : 'Due Amount'}
+                  value={
+                    <span className="font-medium text-destructive">
+                      {formatCurrency(selectedPurchase.dueAmount)}
+                    </span>
+                  }
+                  icon={<TrendingDown className="h-4 w-4 text-destructive" />}
+                />
+              )}
+            </DetailSection>
+            <DetailSection title={isBangla ? 'সরবরাহকারী' : 'Supplier'}>
+              <div className="flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-950 flex items-center justify-center shrink-0">
+                  <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
+                    {selectedPurchase?.supplier.name.slice(0, 2).toUpperCase()}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">{selectedPurchase?.supplier.name}</p>
+                  {selectedPurchase?.supplier.phone && (
+                    <p className="text-xs text-muted-foreground">{selectedPurchase?.supplier.phone}</p>
+                  )}
+                </div>
+              </div>
+            </DetailSection>
+            <DetailSection title={isBangla ? 'পণ্য তালিকা' : 'Items'}>
+              {selectedPurchase?.items.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between px-3 py-2.5 rounded-md bg-muted/50 gap-4"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center shrink-0">
+                      <Package className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{item.itemName}</p>
+                      <p className="text-xs text-muted-foreground whitespace-nowrap">
+                        {item.quantity} × {formatCurrency(item.unitCost)}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-sm font-medium text-foreground shrink-0">
+                    {formatCurrency(item.total)}
+                  </p>
+                </div>
+              ))}
+            </DetailSection>
+          </>
         )}
-      </DetailSection>
-<DetailSection title={isBangla ? 'সরবরাহকারী' : 'Supplier'}>
-  <div className="flex items-center gap-2.5">
-    <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-950 flex items-center justify-center shrink-0">
-      <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
-        {selectedPurchase?.supplier.name.slice(0, 2).toUpperCase()}
-      </span>
-    </div>
-    <div>
-      <p className="text-sm font-medium text-foreground">{selectedPurchase?.supplier.name}</p>
-      {selectedPurchase?.supplier.phone && (
-        <p className="text-xs text-muted-foreground">{selectedPurchase?.supplier.phone}</p>
-      )}
-    </div>
-  </div>
-</DetailSection>
-      <DetailSection title={isBangla ? 'পণ্য তালিকা' : 'Items'}>
-        {selectedPurchase?.items.map((item, idx) => (
-          <div
-            key={idx}
-            className="flex items-center justify-between px-3 py-2.5 rounded-md bg-muted/50 gap-4"
-          >
-            <div className="flex items-center gap-2.5 min-w-0 flex-1">
-              <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center shrink-0">
-                <Package className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">{item.itemName}</p>
-                <p className="text-xs text-muted-foreground whitespace-nowrap">
-                  {item.quantity} × {formatCurrency(item.unitCost)}
-                </p>
-              </div>
-            </div>
-            <p className="text-sm font-medium text-foreground shrink-0">
-              {formatCurrency(item.total)}
-            </p>
-          </div>
-        ))}
-      </DetailSection>
-    </>
-  )}
-</DetailModal>
+      </DetailModal>
       {/* Order Detail Modal */}
       <DetailModal
         isOpen={!!selectedPO}
@@ -594,12 +619,122 @@ export default function PurchasesPage() {
           </>
         )}
       </DetailModal>
+
+      {/* Create Return Modal */}
+      <DetailModal
+        isOpen={!!isOpenRetrun}
+        onClose={() => setIsOpenReturn(false)}
+        title={selectedPO?.poNo || ''}
+        subtitle={isBangla ? 'ক্রয় অর্ডারের বিবরণ' : 'Purchase Order Details'}
+        width="lg"
+      >
+        {isOpenRetrun && (
+        <>
+       <DetailSection title={isBangla ? 'কাস্টমার তথ্য' : 'Customer'}>
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+                <div className="h-10 w-10 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center shrink-0">
+                  <span className="text-sm font-medium text-purple-800 dark:text-purple-300">
+                    {selectedPurchase?.party?.name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
+                  </span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-foreground truncate">{selectedPurchase?.party?.name}</p>
+                  <p className="text-sm text-muted-foreground truncate">{selectedPurchase?.party?.phone}</p>
+                </div>
+                <span className="text-xs font-medium px-2 py-1 rounded-md bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-300 capitalize shrink-0">
+                  {selectedPurchase?.party?.type}
+                </span>
+              </div>
+            </DetailSection>
+
+            <DetailSection title={isBangla ? 'পণ্য তালিকা' : 'Items'}>
+              {selectedPurchase?.items.map((item, idx) => (
+                <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-800 gap-4">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                      <Package className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-foreground truncate">{item.itemName}</p>
+                      <p className="text-xs text-muted-foreground truncate">SKU: {item.item.sku}</p>
+                      <p className="text-sm text-muted-foreground whitespace-nowrap">
+                        {item.quantity} × {formatCurrency(item.unitPrice)}
+                        {item.discount > 0 && (
+                          <span className="ml-2 text-amber-600">-{formatCurrency(item.discount)} off</span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end shrink-0 gap-1">
+                    <p className="font-bold text-foreground">{formatCurrency(item.total)}</p>
+                    <p className="text-xs text-muted-foreground">Cost: {formatCurrency(item.costPrice)}</p>
+                    <p className="text-xs text-green-600 font-medium">+{formatCurrency(item.profit)} profit</p>
+                  </div>
+                </div>
+              ))}
+            </DetailSection>
+  {/* Reason */}
+  <div className="space-y-2">
+    <label className="text-sm font-medium">
+      {isBangla ? 'কারণ' : 'Reason'}
+    </label>
+    <Input
+      placeholder={isBangla ? 'রিটার্নের কারণ লিখুন' : 'Enter return reason'}
+      value={returnForm.reason}
+      onChange={(e) => handleChange('reason', e.target.value)}
+    />
+  </div>
+
+  {/* Notes */}
+  <div className="space-y-2 mt-3">
+    <label className="text-sm font-medium">
+      {isBangla ? 'নোট' : 'Notes'}
+    </label>
+    <Input
+      placeholder={isBangla ? 'অতিরিক্ত তথ্য লিখুন' : 'Additional notes'}
+      value={returnForm.notes}
+      onChange={(e) => handleChange('notes', e.target.value)}
+    />
+  </div>
+
+  {/* Refund Method */}
+  <div className="space-y-2 mt-3">
+    <label className="text-sm font-medium">
+      {isBangla ? 'রিফান্ড পদ্ধতি' : 'Refund Method'}
+    </label>
+    <Select
+      value={returnForm.refundMethod}
+      onValueChange={(value) => handleChange('refundMethod', value)}
+    >
+      <SelectTrigger>
+        <SelectValue placeholder={isBangla ? 'পদ্ধতি নির্বাচন করুন' : 'Select method'} />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="cash">{isBangla ? 'নগদ' : 'Cash'}</SelectItem>
+        <SelectItem value="bank">{isBangla ? 'ব্যাংক' : 'Bank Transfer'}</SelectItem>
+        <SelectItem value="bkash">bKash</SelectItem>
+        <SelectItem value="credit_note">Nagad</SelectItem>
+        {/* <SelectItem value="credit">{isBangla ? 'ক্রেডিট নোট' : 'Credit Note'}</SelectItem> */}
+      </SelectContent>
+    </Select>
+  </div>
+
+<Button
+                className="flex-1 h-11"
+                onClick={handleSubmitReturn}
+                // disabled={isLoading || isUploading}
+              >
+               Make Return 
+              </Button>
+        </>
+        )}
+      </DetailModal>
     </>
   );
 }
 
 // Purchase Row Component
-function PurchaseRow({ purchase, isBangla, index, onView }: { purchase: Purchase; isBangla: boolean; index: number; onView: () => void }) {
+function PurchaseRow({ purchase, isBangla, index, onView,onReturn }: { purchase: Purchase; isBangla: boolean; index: number; onView: () => void;onReturn:()=> void }) {
   const { formatCurrency } = useCurrency();
   const { formatDateTime } = useDateFormat();
 
@@ -649,6 +784,9 @@ function PurchaseRow({ purchase, isBangla, index, onView }: { purchase: Purchase
           <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); onView(); }}>
             <Eye className="h-4 w-4" />
           </Button>
+          <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); onReturn() }}>
+            <RotateCcw className="h-4 w-4" />
+          </Button>
         </div>
         <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
       </div>
@@ -681,16 +819,16 @@ function OrderRow({ order, isBangla, index, onView }: { order: PurchaseOrder; is
         <div className={cn(
           "h-12 w-12 rounded-xl flex items-center justify-center shrink-0",
           order.status === 'received' ? "bg-success-subtle" :
-          order.status === 'cancelled' ? "bg-destructive-subtle" :
-          order.status === 'approved' ? "bg-indigo-subtle" :
-          "bg-warning-subtle"
+            order.status === 'cancelled' ? "bg-destructive-subtle" :
+              order.status === 'approved' ? "bg-indigo-subtle" :
+                "bg-warning-subtle"
         )}>
           <FileText className={cn(
             "h-5 w-5",
             order.status === 'received' ? "text-success" :
-            order.status === 'cancelled' ? "text-destructive" :
-            order.status === 'approved' ? "text-indigo" :
-            "text-warning"
+              order.status === 'cancelled' ? "text-destructive" :
+                order.status === 'approved' ? "text-indigo" :
+                  "text-warning"
           )} />
         </div>
         <div className="min-w-0 flex-1">
