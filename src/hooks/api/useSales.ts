@@ -1,6 +1,5 @@
-import { createSales, getSales, getSalesSummary } from "@/services/sales.services"
-import { useMutation, useQuery } from "@tanstack/react-query"
-import { get } from "react-hook-form"
+import { createSales, getSaleById, getSales, getSalesSummary, updateSale } from "@/services/sales.services"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 export const useCreateSales = () => {
     return useMutation({
@@ -8,7 +7,7 @@ export const useCreateSales = () => {
     })
 }
 
-export const useGetSales = (search:string) => {
+export const useGetSales = (search: string) => {
     return useQuery({
         queryKey: ['sales', search],
         queryFn: () => getSales(search)
@@ -22,15 +21,21 @@ export const useGetSalesSummary = () => {
     })
 }
 
+export const useGetSaleById = (id: string) => {
+    return useQuery({
+        queryKey: ['sales', id],
+        queryFn: () => getSaleById(id),
+        enabled: !!id,
+    })
+}
 
-// export const useDeleteSels = () => {
-//     return useMutation({
-//         mutationFn: deleteSels
-//     })
-// }
+export const useUpdateSale = (id: string) => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: (data: any) => updateSale({ id, data }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['sales'] })
+        }
+    })
+}
 
-// export const useUpdateSels = () => {
-//     return useMutation({
-//         mutationFn: updateSels
-//     })
-// }

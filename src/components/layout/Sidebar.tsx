@@ -25,6 +25,9 @@ import {
   CheckCircle,
   Trash2,
   Icon,
+  CreditCard,
+  LayoutList,
+  Tag,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -46,9 +49,11 @@ const mainNavItems = [
   { page: '/purchases', icon: Truck, labelKey: 'Purchases', labelBn: 'ক্রয়' },
   { page: '/parties' , icon: Users, labelKey: 'Parties', labelBn: 'পার্টি' },
   { page: '/inventory', icon: Package, labelKey: 'Inventory', labelBn: 'ইনভেন্টরি' },
-  { page: '/inventory/batches' , icon: Package, labelKey: 'Batches', labelBn: 'ব্যাচ' },
+  { page: '/inventory/batches' , icon: Tag, labelKey: 'Batches', labelBn: 'ব্যাচ' },
   { page: '/expenses', icon: Receipt, labelKey: 'Expenses', labelBn: 'খরচ' },
   { page: '/reports', icon: BarChart3, labelKey: 'Reports', labelBn: 'রিপোর্ট' },
+  { page: '/collection', icon: LayoutList, labelKey: 'Collection Center', labelBn: 'কালেকশন সেন্টার' },
+  { page: '/payment-plans', icon: CreditCard, labelKey: 'Payment Plans', labelBn: 'পেমেন্ট প্ল্যান' },
 ];
 
 const bottomNavItems = [
@@ -117,7 +122,7 @@ export function Sidebar() {
         )}
 
         {/* Main Navigation */}
-        <ScrollArea className="flex-1 px-3 py-4 scrollbar-premium">
+        <ScrollArea className="flex-1 px-3 py-4 scrollbar-premium overflow-scroll">
           <nav className="space-y-1">
             {mainNavItems?.map((item, index) => (
               <div key={item.page} className="stagger-item" style={{ animationDelay: `${index * 30}ms` }}>

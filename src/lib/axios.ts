@@ -9,6 +9,7 @@ const client = axios.create({
 client.interceptors.response.use(
   (res) => res,
   (error) => {
+    console.log(error.response.data)
     const message = error.response.data.message || "Something went wrong!";
     if (error.response.status === 401) {
       if (typeof window !== "undefined") {

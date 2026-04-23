@@ -5,10 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { 
-  ArrowLeft, 
-  Search, 
-  RotateCcw, 
+import {
+  ArrowLeft,
+  Search,
+  RotateCcw,
   Eye,
   Calendar,
   FileText,
@@ -25,6 +25,8 @@ import { useAppTranslation } from '@/hooks/useAppTranslation';
 import { useNavigation } from '@/stores/uiStore';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { useGetSalesReturns } from '@/hooks/api/useReturns';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface SaleReturn {
   id: string;
@@ -55,39 +57,27 @@ interface SaleReturn {
 export default function SalesReturnsPage() {
   const { t, isBangla } = useAppTranslation();
   const { navigateTo } = useNavigation();
-  
-  const [returns, setReturns] = useState<SaleReturn[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedReturn, setSelectedReturn] = useState<SaleReturn | null>(null);
 
-  useEffect(() => {
-    fetchReturns();
-  }, []);
+  const { data: returnsData, isLoading: loading } = useGetSalesReturns();
+  const returns = returnsData?.data || [];
 
-  const fetchReturns = async () => {
-    try {
-      const response = await fetch('/api/sales/returns');
-      const data = await response.json();
-      if (data.success) {
-        setReturns(data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching returns:', error);
-    } finally {
-      setLoading(false);
-    }
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['sales-returns'] });
   };
 
   const filteredReturns = returns.filter(r => {
-    const matchesSearch = 
+    const matchesSearch =
       r.returnNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
       r.sale?.invoiceNo?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       r.party?.name?.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     const matchesStatus = statusFilter === 'all' || r.status === statusFilter;
-    
+
     return matchesSearch && matchesStatus;
   });
 
@@ -97,10 +87,10 @@ export default function SalesReturnsPage() {
       draft: { bg: 'bg-gray-100 text-gray-700', text: isBangla ? 'খসড়া' : 'Draft', icon: FileText },
       cancelled: { bg: 'bg-red-100 text-red-700', text: isBangla ? 'বাতিল' : 'Cancelled', icon: AlertCircle },
     };
-    
+
     const style = styles[status] || styles.draft;
     const Icon = style.icon;
-    
+
     return (
       <Badge className={cn('gap-1', style.bg)}>
         <Icon className="h-3 w-3" />
@@ -115,7 +105,7 @@ export default function SalesReturnsPage() {
       credit_note: isBangla ? 'ক্রেডিট নোট' : 'Credit Note',
       bank: isBangla ? 'ব্যাংক' : 'Bank Transfer',
     };
-    
+
     return (
       <Badge variant="outline" className="text-xs">
         {methods[method] || method}
@@ -144,15 +134,15 @@ export default function SalesReturnsPage() {
                   {isBangla ? 'বিক্রয় ফেরত' : 'Sales Returns'}
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  {isBangla 
-                    ? `${filteredReturns.length}টি ফেরত` 
+                  {isBangla
+                    ? `${filteredReturns.length}টি ফেরত`
                     : `${filteredReturns.length} returns`}
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={fetchReturns}>
+              <Button variant="outline" size="sm" onClick={handleRefresh}>
                 <RefreshCw className="h-4 w-4 mr-2" />
                 {isBangla ? 'রিফ্রেশ' : 'Refresh'}
               </Button>
@@ -179,7 +169,7 @@ export default function SalesReturnsPage() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
@@ -195,7 +185,7 @@ export default function SalesReturnsPage() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
@@ -213,7 +203,7 @@ export default function SalesReturnsPage() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
@@ -250,7 +240,7 @@ export default function SalesReturnsPage() {
               className="pl-10"
             />
           </div>
-          
+
           <div className="flex gap-2">
             <select
               value={statusFilter}
@@ -283,7 +273,7 @@ export default function SalesReturnsPage() {
                 {isBangla ? 'কোন ফেরত নেই' : 'No returns found'}
               </h3>
               <p className="mt-2 text-sm text-muted-foreground">
-                {isBangla 
+                {isBangla
                   ? 'কোন বিক্রয় ফেরত এখনো তৈরি হয়নি'
                   : 'No sales returns have been created yet'}
               </p>
@@ -292,8 +282,8 @@ export default function SalesReturnsPage() {
         ) : (
           <div className="space-y-3">
             {filteredReturns.map((saleReturn) => (
-              <Card 
-                key={saleReturn.id} 
+              <Card
+                key={saleReturn.id}
                 className="cursor-pointer hover:border-primary/50 transition-colors"
                 onClick={() => setSelectedReturn(saleReturn)}
               >
@@ -303,32 +293,32 @@ export default function SalesReturnsPage() {
                       <div className="h-12 w-12 rounded-lg bg-orange-100 flex items-center justify-center">
                         <RotateCcw className="h-6 w-6 text-orange-600" />
                       </div>
-                      
+
                       <div>
                         <div className="flex items-center gap-2">
                           <h3 className="font-semibold">{saleReturn.returnNo}</h3>
                           {getStatusBadge(saleReturn.status)}
                         </div>
-                        
+
                         <div className="mt-1 flex items-center gap-4 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <FileText className="h-3 w-3" />
                             {saleReturn.sale?.invoiceNo || 'N/A'}
                           </span>
-                          
+
                           {saleReturn.party && (
                             <span className="flex items-center gap-1">
                               <User className="h-3 w-3" />
                               {saleReturn.party.name}
                             </span>
                           )}
-                          
+
                           <span className="flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
                             {format(new Date(saleReturn.createdAt), 'dd MMM yyyy')}
                           </span>
                         </div>
-                        
+
                         <div className="mt-2 flex items-center gap-2">
                           <span className="text-xs text-muted-foreground">
                             {saleReturn.items.length} {isBangla ? 'আইটেম' : 'items'}
@@ -337,7 +327,7 @@ export default function SalesReturnsPage() {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="text-right">
                       <p className="text-lg font-bold text-red-600">
                         ৳{saleReturn.refundAmount.toLocaleString()}
@@ -363,8 +353,8 @@ export default function SalesReturnsPage() {
                 <RotateCcw className="h-5 w-5 text-orange-600" />
                 {selectedReturn.returnNo}
               </CardTitle>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 size="icon"
                 onClick={() => setSelectedReturn(null)}
               >
@@ -372,7 +362,7 @@ export default function SalesReturnsPage() {
                 ×
               </Button>
             </CardHeader>
-            
+
             <CardContent className="space-y-6">
               {/* Info Grid */}
               <div className="grid grid-cols-2 gap-4">
@@ -382,14 +372,14 @@ export default function SalesReturnsPage() {
                   </p>
                   <p className="font-medium">{selectedReturn.sale?.invoiceNo}</p>
                 </div>
-                
+
                 <div>
                   <p className="text-sm text-muted-foreground">
                     {isBangla ? 'গ্রাহক' : 'Customer'}
                   </p>
                   <p className="font-medium">{selectedReturn.party?.name || 'N/A'}</p>
                 </div>
-                
+
                 <div>
                   <p className="text-sm text-muted-foreground">
                     {isBangla ? 'তারিখ' : 'Date'}
@@ -398,7 +388,7 @@ export default function SalesReturnsPage() {
                     {format(new Date(selectedReturn.createdAt), 'dd MMMM yyyy')}
                   </p>
                 </div>
-                
+
                 <div>
                   <p className="text-sm text-muted-foreground">
                     {isBangla ? 'রিফান্ড পদ্ধতি' : 'Refund Method'}
@@ -406,7 +396,7 @@ export default function SalesReturnsPage() {
                   {getRefundMethodBadge(selectedReturn.refundMethod)}
                 </div>
               </div>
-              
+
               {/* Reason */}
               {selectedReturn.reason && (
                 <div className="p-3 bg-muted/50 rounded-lg">
@@ -416,13 +406,13 @@ export default function SalesReturnsPage() {
                   <p className="mt-1">{selectedReturn.reason}</p>
                 </div>
               )}
-              
+
               {/* Items Table */}
               <div>
                 <h4 className="font-medium mb-3">
                   {isBangla ? 'ফেরত আইটেম' : 'Returned Items'}
                 </h4>
-                
+
                 <div className="border rounded-lg overflow-hidden">
                   <table className="w-full text-sm">
                     <thead className="bg-muted/50">
@@ -456,7 +446,7 @@ export default function SalesReturnsPage() {
                   </table>
                 </div>
               </div>
-              
+
               {/* Actions */}
               <div className="flex justify-end gap-2 pt-4 border-t">
                 <Button variant="outline" onClick={() => setSelectedReturn(null)}>

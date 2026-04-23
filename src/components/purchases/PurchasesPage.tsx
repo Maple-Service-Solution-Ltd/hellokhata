@@ -94,8 +94,8 @@ export default function PurchasesPage() {
   const [activeTab, setActiveTab] = useState<'purchases' | 'orders'>('purchases');
   const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null);
   const [selectedPO, setSelectedPO] = useState<PurchaseOrder | null>(null);
-   const [isOpenDetail,setIsOpenDetail] = useState(false);
- const [isOpenRetrun,setIsOpenReturn] = useState(false);
+  const [isOpenDetail, setIsOpenDetail] = useState(false);
+  const [isOpenRetrun, setIsOpenReturn] = useState(false);
 
   const { data: purchases = [], isLoading: purchasesLoading } = useGetPurchases();
   const { data: orders = [], isLoading: ordersLoading } = useQuery({
@@ -111,7 +111,7 @@ export default function PurchasesPage() {
     notes: '',
     refundMethod: 'cash',
   });
-  
+
   // Calculate purchase stats
   const totalPurchases = purchases.reduce((sum, p) => sum + p.total, 0);
   const now = new Date();
@@ -144,21 +144,21 @@ export default function PurchasesPage() {
     return matchesSearch && matchesStatus;
   });
 
- const handleChange = (field: string, value: string) => {
-  setReturnForm((prev) => ({
-    ...prev,
-    [field]: value,
-  }));
-};
-    const handleSubmitReturn = () => {
-  if (!returnForm.reason || !returnForm.refundMethod) {
-    console.log(returnForm)
-    toast.error(isBangla ? 'সব তথ্য দিন' : 'Please fill required fields');
-    return;
-  }
+  const handleChange = (field: string, value: string) => {
+    setReturnForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+  const handleSubmitReturn = () => {
+    if (!returnForm.reason || !returnForm.refundMethod) {
+      console.log(returnForm)
+      toast.error(isBangla ? 'সব তথ্য দিন' : 'Please fill required fields');
+      return;
+    }
 
-  toast.success(isBangla ? 'রিটার্ন সফল' : 'Return processed successfully');
-};
+    toast.success(isBangla ? 'রিটার্ন সফল' : 'Return processed successfully');
+  };
 
   return (
     <>
@@ -301,8 +301,8 @@ export default function PurchasesPage() {
                           purchase={purchase}
                           isBangla={isBangla}
                           index={index}
-                          onView={() => {setSelectedPurchase(purchase); setIsOpenDetail(prev => !prev)}}
-                          onReturn={() => {setSelectedPurchase(purchase); setIsOpenReturn(prev => !prev)}}
+                          onView={() => { setSelectedPurchase(purchase); setIsOpenDetail(prev => !prev) }}
+                          onReturn={() => router.push(`/purchases/${purchase.id}/return/`)}
                         />
                       ))}
                     </div>
@@ -629,8 +629,8 @@ export default function PurchasesPage() {
         width="lg"
       >
         {isOpenRetrun && (
-        <>
-       <DetailSection title={isBangla ? 'কাস্টমার তথ্য' : 'Customer'}>
+          <>
+            <DetailSection title={isBangla ? 'কাস্টমার তথ্য' : 'Customer'}>
               <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
                 <div className="h-10 w-10 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center shrink-0">
                   <span className="text-sm font-medium text-purple-800 dark:text-purple-300">
@@ -673,60 +673,60 @@ export default function PurchasesPage() {
                 </div>
               ))}
             </DetailSection>
-  {/* Reason */}
-  <div className="space-y-2">
-    <label className="text-sm font-medium">
-      {isBangla ? 'কারণ' : 'Reason'}
-    </label>
-    <Input
-      placeholder={isBangla ? 'রিটার্নের কারণ লিখুন' : 'Enter return reason'}
-      value={returnForm.reason}
-      onChange={(e) => handleChange('reason', e.target.value)}
-    />
-  </div>
+            {/* Reason */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
+                {isBangla ? 'কারণ' : 'Reason'}
+              </label>
+              <Input
+                placeholder={isBangla ? 'রিটার্নের কারণ লিখুন' : 'Enter return reason'}
+                value={returnForm.reason}
+                onChange={(e) => handleChange('reason', e.target.value)}
+              />
+            </div>
 
-  {/* Notes */}
-  <div className="space-y-2 mt-3">
-    <label className="text-sm font-medium">
-      {isBangla ? 'নোট' : 'Notes'}
-    </label>
-    <Input
-      placeholder={isBangla ? 'অতিরিক্ত তথ্য লিখুন' : 'Additional notes'}
-      value={returnForm.notes}
-      onChange={(e) => handleChange('notes', e.target.value)}
-    />
-  </div>
+            {/* Notes */}
+            <div className="space-y-2 mt-3">
+              <label className="text-sm font-medium">
+                {isBangla ? 'নোট' : 'Notes'}
+              </label>
+              <Input
+                placeholder={isBangla ? 'অতিরিক্ত তথ্য লিখুন' : 'Additional notes'}
+                value={returnForm.notes}
+                onChange={(e) => handleChange('notes', e.target.value)}
+              />
+            </div>
 
-  {/* Refund Method */}
-  <div className="space-y-2 mt-3">
-    <label className="text-sm font-medium">
-      {isBangla ? 'রিফান্ড পদ্ধতি' : 'Refund Method'}
-    </label>
-    <Select
-      value={returnForm.refundMethod}
-      onValueChange={(value) => handleChange('refundMethod', value)}
-    >
-      <SelectTrigger>
-        <SelectValue placeholder={isBangla ? 'পদ্ধতি নির্বাচন করুন' : 'Select method'} />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="cash">{isBangla ? 'নগদ' : 'Cash'}</SelectItem>
-        <SelectItem value="bank">{isBangla ? 'ব্যাংক' : 'Bank Transfer'}</SelectItem>
-        <SelectItem value="bkash">bKash</SelectItem>
-        <SelectItem value="credit_note">Nagad</SelectItem>
-        {/* <SelectItem value="credit">{isBangla ? 'ক্রেডিট নোট' : 'Credit Note'}</SelectItem> */}
-      </SelectContent>
-    </Select>
-  </div>
-
-<Button
-                className="flex-1 h-11"
-                onClick={handleSubmitReturn}
-                // disabled={isLoading || isUploading}
+            {/* Refund Method */}
+            <div className="space-y-2 mt-3">
+              <label className="text-sm font-medium">
+                {isBangla ? 'রিফান্ড পদ্ধতি' : 'Refund Method'}
+              </label>
+              <Select
+                value={returnForm.refundMethod}
+                onValueChange={(value) => handleChange('refundMethod', value)}
               >
-               Make Return 
-              </Button>
-        </>
+                <SelectTrigger>
+                  <SelectValue placeholder={isBangla ? 'পদ্ধতি নির্বাচন করুন' : 'Select method'} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cash">{isBangla ? 'নগদ' : 'Cash'}</SelectItem>
+                  <SelectItem value="bank">{isBangla ? 'ব্যাংক' : 'Bank Transfer'}</SelectItem>
+                  <SelectItem value="bkash">bKash</SelectItem>
+                  <SelectItem value="credit_note">Nagad</SelectItem>
+                  {/* <SelectItem value="credit">{isBangla ? 'ক্রেডিট নোট' : 'Credit Note'}</SelectItem> */}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button
+              className="flex-1 h-11"
+              onClick={handleSubmitReturn}
+            // disabled={isLoading || isUploading}
+            >
+              Make Return
+            </Button>
+          </>
         )}
       </DetailModal>
     </>
@@ -734,7 +734,7 @@ export default function PurchasesPage() {
 }
 
 // Purchase Row Component
-function PurchaseRow({ purchase, isBangla, index, onView,onReturn }: { purchase: Purchase; isBangla: boolean; index: number; onView: () => void;onReturn:()=> void }) {
+function PurchaseRow({ purchase, isBangla, index, onView, onReturn }: { purchase: Purchase; isBangla: boolean; index: number; onView: () => void; onReturn: () => void }) {
   const { formatCurrency } = useCurrency();
   const { formatDateTime } = useDateFormat();
 

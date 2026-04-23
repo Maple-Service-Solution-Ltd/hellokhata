@@ -41,7 +41,7 @@ import { useCurrency } from '@/hooks/useAppTranslation';
 import { useNavigation } from '@/stores/uiStore';
 import { cn } from '@/lib/utils';
 import { DetailModal, DetailRow, DetailSection } from '@/components/shared/DetailModal';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useGetSalesReturns, useGetPurchaseReturns } from '@/hooks/api/useReturns';
 import { useToast } from '@/hooks/use-toast';
 
 interface ReturnItem {
@@ -83,20 +83,7 @@ interface PurchaseReturn {
   createdAt: string;
 }
 
-// Fetch sales returns
-async function fetchSalesReturns(): Promise<SaleReturn[]> {
-  const res = await fetch('/api/sales/returns');
-  if (!res.ok) throw new Error('Failed to fetch sales returns');
-  return res.json();
-}
-
-// Fetch purchase returns
-async function fetchPurchaseReturns(): Promise<PurchaseReturn[]> {
-  const res = await fetch('/api/purchases/returns');
-  if (!res.ok) throw new Error('Failed to fetch purchase returns');
-  return res.json();
-}
-
+// Sales Returns Management Page Component
 export default function ReturnsPage() {
   const { t, isBangla } = useAppTranslation();
   const { formatCurrency } = useCurrency();
@@ -106,15 +93,11 @@ export default function ReturnsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedReturn, setSelectedReturn] = useState<SaleReturn | PurchaseReturn | null>(null);
 
-  const { data: salesReturns = [], isLoading: loadingSales } = useQuery({
-    queryKey: ['sales-returns'],
-    queryFn: fetchSalesReturns,
-  });
+  const { data: salesReturnsData, isLoading: loadingSales } = useGetSalesReturns();
+  const { data: purchaseReturnsData, isLoading: loadingPurchases } = useGetPurchaseReturns();
 
-  const { data: purchaseReturns = [], isLoading: loadingPurchases } = useQuery({
-    queryKey: ['purchase-returns'],
-    queryFn: fetchPurchaseReturns,
-  });
+  const salesReturns = salesReturnsData?.data || [];
+  const purchaseReturns = purchaseReturnsData?.data || [];
 
   // Calculate stats
   const totalSalesReturns = salesReturns.reduce((sum, r) => sum + r.totalAmount, 0);
