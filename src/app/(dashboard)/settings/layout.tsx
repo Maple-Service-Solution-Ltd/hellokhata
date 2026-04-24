@@ -1,5 +1,5 @@
 'use client';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/ui/premium';
 import { useAppTranslation } from '@/hooks/useAppTranslation';
 import { cn } from '@/lib/utils';
 import { useNavigation, useUiStore } from '@/stores';
