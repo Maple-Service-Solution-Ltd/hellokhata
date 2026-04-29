@@ -64,6 +64,7 @@ export default function LoginPage() {
     resendOTP.mutate(obj, {
       onSuccess: (data) => {
         setDemoOTP(data.data.otp);
+
         toast.info("OTP Resent!");
       },
     });
@@ -89,6 +90,7 @@ export default function LoginPage() {
       onSuccess: (data) => {
         if (data.success) {
           setUserId(data.userId);
+          setSessionFromAuthResponse(data);
           toast.success(data.message);
           router.push("/");
           // setStep("otp");
