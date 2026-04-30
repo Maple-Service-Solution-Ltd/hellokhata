@@ -76,7 +76,7 @@ export default function SalesPage() {
 
 
 
-  const { data: salesData, isLoading } = useGetSales(searchTerm);
+  const { data: salesData, isLoading } = useGetSales({ search: searchTerm });
   const { data: salesSummary } = useGetSalesSummary();
   const sales = salesData?.data || [];
   const summary = salesSummary?.data;

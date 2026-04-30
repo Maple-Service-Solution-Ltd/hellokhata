@@ -29,21 +29,22 @@ import {
   FileText,
   Loader2,
 } from 'lucide-react';
-// import { authFetch } from '@/lib/api-client';s
+// import { authFetch } from '@/lib/api-client'; s
 import { useCurrency } from '@/hooks/useAppTranslation';
 import { cn } from '@/lib/utils';
 import { PaymentPlanCard } from './PaymentPlanCard';
 import { NewPaymentPlanModal } from './NewPaymentPlanModal';
 import { InstallmentSchedule } from './InstallmentSchedule';
 import { DetailModal, DetailRow, DetailSection } from '@/components/shared/DetailModal';
-import type { 
-  Party, 
-  PaymentPlan, 
-  PaymentPlanSummary, 
+import type {
+  Party,
+  PaymentPlan,
+  PaymentPlanSummary,
   Installment,
   PaymentPlanFormData,
   Sale,
 } from '@/types';
+import { usePaymentSummary } from '@/hooks/api/usePayments';
 
 interface PaymentPlanWithDetails extends PaymentPlan {
   party: { id: string; name: string; phone?: string | null };
@@ -55,7 +56,7 @@ interface PaymentPlanWithDetails extends PaymentPlan {
 
 export default function PaymentPlansPage() {
   const { formatCurrency } = useCurrency();
-  
+
   // State
   const [plans, setPlans] = useState<PaymentPlanWithDetails[]>([]);
   const [summary, setSummary] = useState<PaymentPlanSummary | null>(null);
@@ -64,7 +65,7 @@ export default function PaymentPlansPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  
+
   // Modal states
   const [newPlanModalOpen, setNewPlanModalOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<PaymentPlanWithDetails | null>(null);
@@ -72,125 +73,35 @@ export default function PaymentPlansPage() {
 
   // Fetch data
   const fetchData = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const [plansRes, partiesRes, salesRes] = await Promise.all([
-        authFetch(`/api/payment-plans?status=${statusFilter}&search=${searchTerm}`),
-        authFetch('/api/parties'),
-        authFetch('/api/sales'),
-      ]);
 
-      const plansData = await plansRes.json();
-      const partiesData = await partiesRes.json();
-      const salesData = await salesRes.json();
-
-      if (plansData.success) {
-        setPlans(plansData.data || []);
-        setSummary(plansData.summary);
-      }
-      if (partiesData.success) {
-        setParties(partiesData.data || []);
-      }
-      if (salesData.success) {
-        setSales(salesData.data || []);
-      }
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setIsLoading(false);
-    }
   }, [statusFilter, searchTerm]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  // Create new payment plan
-  const handleCreatePlan = async (data: PaymentPlanFormData) => {
-    const response = await authFetch('/api/payment-plans', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
+  // get summery
+  const { data: summaryData, isLoading: summaryLoading } = usePaymentSummary();
+  const paymentSummary = summaryData?.data || {} as PaymentPlanSummary
 
-    const result = await response.json();
-    if (!result.success) {
-      throw new Error(result.error?.message || 'Failed to create plan');
-    }
-
-    fetchData();
-  };
 
   // Record payment
-  const handleRecordPayment = async (
-    planId: string,
-    installmentId: string,
-    amount: number,
-    paidDate: string,
-    notes?: string
-  ) => {
-    const response = await authFetch(`/api/payment-plans/${planId}/installments`, {
-      method: 'POST',
-      body: JSON.stringify({ installmentId, amount, paidDate, notes }),
-    });
+  const handleRecordPayment = async () => { }
 
-    const result = await response.json();
-    if (!result.success) {
-      throw new Error(result.error?.message || 'Failed to record payment');
-    }
 
-    fetchData();
-    if (selectedPlan?.id === planId) {
-      // Refresh selected plan details
-      fetchPlanDetails(planId);
-    }
-  };
 
-  // Send reminder
-  const handleSendReminder = async (planId: string, installmentId: string) => {
-    const response = await authFetch(`/api/payment-plans/${planId}/installments`, {
-      method: 'PATCH',
-      body: JSON.stringify({ installmentId, action: 'send_reminder' }),
-    });
 
-    const result = await response.json();
-    if (!result.success) {
-      throw new Error(result.error?.message || 'Failed to send reminder');
-    }
-  };
-
-  // Delete plan
-  const handleDeletePlan = async (planId: string) => {
-    const response = await authFetch(`/api/payment-plans/${planId}`, {
-      method: 'DELETE',
-    });
-
-    const result = await response.json();
-    if (!result.success) {
-      throw new Error(result.error?.message || 'Failed to delete plan');
-    }
-
-    fetchData();
-  };
 
   // Fetch plan details
   const fetchPlanDetails = async (planId: string) => {
-    const response = await authFetch(`/api/payment-plans/${planId}`);
-    const result = await response.json();
-    
-    if (result.success) {
-      setSelectedPlan({
-        ...result.data,
-        installments: result.data.installments || [],
-      });
-      setDetailsModalOpen(true);
-    }
+
   };
 
   // Filter plans
   const filteredPlans = plans.filter((plan) => {
     const matchesSearch = searchTerm
       ? plan.party?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        plan.party?.phone?.includes(searchTerm)
+      plan.party?.phone?.includes(searchTerm)
       : true;
     const matchesStatus = statusFilter === 'all' || plan.status === statusFilter;
     return matchesSearch && matchesStatus;
@@ -200,7 +111,7 @@ export default function PaymentPlansPage() {
   const statsCards = [
     {
       title: 'Total Outstanding',
-      value: formatCurrency(summary?.totalOutstanding || 0),
+      value: formatCurrency(paymentSummary?.totalOutstanding || 0),
       icon: DollarSign,
       color: 'text-emerald-600',
       bgColor: 'bg-emerald-100',
@@ -345,14 +256,14 @@ export default function PaymentPlansPage() {
       <NewPaymentPlanModal
         isOpen={newPlanModalOpen}
         onClose={() => setNewPlanModalOpen(false)}
-        onSubmit={handleCreatePlan}
-        parties={parties}
-        sales={sales.map((s) => ({
-          id: s.id,
-          invoiceNo: s.invoiceNo,
-          total: s.total,
-          partyId: s.partyId || '',
-        }))}
+      // onSubmit={handleCreatePlan}
+      // parties={parties}
+      // sales={sales.map((s) => ({
+      //   id: s.id,
+      //   invoiceNo: s.invoiceNo,
+      //   total: s.total,
+      //   partyId: s.partyId || '',
+      // }))}
       />
 
       {/* Plan Details Modal */}

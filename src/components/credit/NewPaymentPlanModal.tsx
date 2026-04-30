@@ -1,9 +1,9 @@
 // Hello Khata - New Payment Plan Modal
 // Create a new payment plan with automatic installment calculation
 
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,19 +11,19 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Command,
   CommandEmpty,
@@ -31,93 +31,115 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '@/components/ui/command';
+} from "@/components/ui/command";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, Check, ChevronsUpDown, Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
-import type { Party, PaymentFrequency, PaymentPlanFormData } from '@/types';
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { CalendarIcon, Check, ChevronsUpDown, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import type { Party, PaymentFrequency, PaymentPlanFormData } from "@/types";
+import { useParties } from "@/hooks/api/useParties";
+import { useGetSales } from "@/hooks/api/useSales";
+import { useCreatePaymentPlans } from "@/hooks/api/usePayments";
+import { toast } from "sonner";
+// import { toast } from "@/hooks/use-toast";
 
 interface NewPaymentPlanModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: PaymentPlanFormData) => Promise<void>;
-  parties: Party[];
-  sales?: Array<{ id: string; invoiceNo: string; total: number; partyId: string }>;
   isLoading?: boolean;
 }
 
-const frequencyOptions: { value: PaymentFrequency; label: string; days: number }[] = [
-  { value: 'weekly', label: 'Weekly', days: 7 },
-  { value: 'bi_weekly', label: 'Bi-Weekly', days: 14 },
-  { value: 'monthly', label: 'Monthly', days: 30 },
-];
+const frequencyOptions: {
+  value: PaymentFrequency;
+  label: string;
+  days: number;
+}[] = [
+    { value: "weekly", label: "Weekly", days: 7 },
+    { value: "bi_weekly", label: "Bi-Weekly", days: 14 },
+    { value: "monthly", label: "Monthly", days: 30 },
+  ];
 
 export function NewPaymentPlanModal({
   isOpen,
   onClose,
-  onSubmit,
-  parties,
-  sales = [],
+  // onSubmit,
   isLoading = false,
 }: NewPaymentPlanModalProps) {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<Partial<PaymentPlanFormData>>({
     totalAmount: 0,
     totalInstallments: 1,
-    frequency: 'monthly',
-    startDate: new Date().toISOString().split('T')[0],
+    frequency: "monthly",
+    startDate: new Date().toISOString().split("T")[0],
   });
+
+  const [searchParty, setSearchParty] = useState('');
   const [selectedParty, setSelectedParty] = useState<Party | null>(null);
   const [partyPopoverOpen, setPartyPopoverOpen] = useState(false);
   const [salePopoverOpen, setSalePopoverOpen] = useState(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  const { data: partiesData, isLoading: partiesLoading } = useParties({ type: 'customer', search: searchParty });
+  const parties = partiesData?.data || []
+
+  const { data: salesData, isLoading: salesLoading } = useGetSales();
+  const sales = salesData?.data;
   // Filter sales for selected party
-  const partySales = sales.filter((s) => s.partyId === formData.partyId);
+  const partySales = sales?.filter((s) => s.partyId === formData.partyId);
+  const { mutate: createPaymentPlans, isPending: isSubmitting } = useCreatePaymentPlans()
 
   // Calculate installment preview
-  const installmentAmount = formData.totalAmount && formData.totalInstallments
-    ? Math.ceil((formData.totalAmount / formData.totalInstallments) * 100) / 100
-    : 0;
-  
-  const lastInstallmentAmount = formData.totalAmount && formData.totalInstallments
-    ? formData.totalAmount - (installmentAmount * (formData.totalInstallments - 1))
-    : 0;
+  const installmentAmount =
+    formData.totalAmount && formData.totalInstallments
+      ? Math.ceil((formData.totalAmount / formData.totalInstallments) * 100) /
+      100
+      : 0;
+
+  const lastInstallmentAmount =
+    formData.totalAmount && formData.totalInstallments
+      ? formData.totalAmount -
+      installmentAmount * (formData.totalInstallments - 1)
+      : 0;
 
   // Generate preview due dates
   const generatePreviewDates = () => {
-    if (!formData.startDate || !formData.totalInstallments || !formData.frequency) return [];
-    
+    if (
+      !formData.startDate ||
+      !formData.totalInstallments ||
+      !formData.frequency
+    )
+      return [];
+
     const dates: Date[] = [];
     const start = new Date(formData.startDate);
-    const frequency = frequencyOptions.find((f) => f.value === formData.frequency);
-    
+    const frequency = frequencyOptions.find(
+      (f) => f.value === formData.frequency,
+    );
+
     for (let i = 0; i < formData.totalInstallments; i++) {
       const dueDate = new Date(start);
-      
+
       switch (formData.frequency) {
-        case 'weekly':
-          dueDate.setDate(start.getDate() + (i * 7));
+        case "weekly":
+          dueDate.setDate(start.getDate() + i * 7);
           break;
-        case 'bi_weekly':
-          dueDate.setDate(start.getDate() + (i * 14));
+        case "bi_weekly":
+          dueDate.setDate(start.getDate() + i * 14);
           break;
-        case 'monthly':
+        case "monthly":
           dueDate.setMonth(start.getMonth() + i);
           break;
       }
-      
+
       dates.push(dueDate);
     }
-    
+
     return dates;
   };
 
@@ -130,8 +152,8 @@ export function NewPaymentPlanModal({
       setFormData({
         totalAmount: 0,
         totalInstallments: 1,
-        frequency: 'monthly',
-        startDate: new Date().toISOString().split('T')[0],
+        frequency: "monthly",
+        startDate: new Date().toISOString().split("T")[0],
       });
       setSelectedParty(null);
       setErrors({});
@@ -143,17 +165,17 @@ export function NewPaymentPlanModal({
 
     if (stepNumber === 1) {
       if (!formData.partyId) {
-        newErrors.partyId = 'Please select a customer';
+        newErrors.partyId = "Please select a customer";
       }
     } else if (stepNumber === 2) {
       if (!formData.totalAmount || formData.totalAmount <= 0) {
-        newErrors.totalAmount = 'Amount must be greater than 0';
+        newErrors.totalAmount = "Amount must be greater than 0";
       }
       if (!formData.totalInstallments || formData.totalInstallments < 1) {
-        newErrors.totalInstallments = 'At least 1 installment required';
+        newErrors.totalInstallments = "At least 1 installment required";
       }
       if (!formData.startDate) {
-        newErrors.startDate = 'Start date is required';
+        newErrors.startDate = "Start date is required";
       }
     }
 
@@ -172,24 +194,19 @@ export function NewPaymentPlanModal({
   };
 
   const handleSubmit = async () => {
-    if (!validateStep(2)) return;
-    
-    setIsSubmitting(true);
-    try {
-      await onSubmit(formData as PaymentPlanFormData);
-      onClose();
-    } catch (error) {
-      console.error('Failed to create plan:', error);
-      setErrors({ submit: 'Failed to create payment plan' });
-    } finally {
-      setIsSubmitting(false);
-    }
+    createPaymentPlans(formData, {
+      onSuccess: () => {
+        toast.success('Payment plan created successfully!')
+        onClose(true)
+      }
+    })
+
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-BD', {
-      style: 'currency',
-      currency: 'BDT',
+    return new Intl.NumberFormat("en-BD", {
+      style: "currency",
+      currency: "BDT",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
@@ -211,8 +228,12 @@ export function NewPaymentPlanModal({
             <div
               key={s}
               className={cn(
-                'h-2 w-8 rounded-full transition-colors',
-                s === step ? 'bg-emerald-500' : s < step ? 'bg-emerald-200' : 'bg-gray-200'
+                "h-2 w-8 rounded-full transition-colors",
+                s === step
+                  ? "bg-emerald-500"
+                  : s < step
+                    ? "bg-emerald-200"
+                    : "bg-gray-200",
               )}
             />
           ))}
@@ -225,14 +246,17 @@ export function NewPaymentPlanModal({
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label>Select Customer *</Label>
-                  <Popover open={partyPopoverOpen} onOpenChange={setPartyPopoverOpen}>
+                  <Popover
+                    open={partyPopoverOpen}
+                    onOpenChange={setPartyPopoverOpen}
+                  >
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
                         role="combobox"
                         className={cn(
-                          'w-full justify-between',
-                          errors.partyId && 'border-red-500'
+                          "w-full justify-between",
+                          errors.partyId && "border-red-500",
                         )}
                       >
                         {selectedParty ? (
@@ -241,33 +265,37 @@ export function NewPaymentPlanModal({
                             {selectedParty.phone && ` (${selectedParty.phone})`}
                           </span>
                         ) : (
-                          'Select a customer...'
+                          "Select a customer..."
                         )}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-full p-0" align="start">
                       <Command>
-                        <CommandInput placeholder="Search customers..." />
+                        <CommandInput onValueChange={value => setSearchParty(value)} className="w-full" placeholder="Search customers..." />
                         <CommandList>
                           <CommandEmpty>No customer found.</CommandEmpty>
                           <CommandGroup>
                             {parties
-                              .filter((p) => p.type === 'customer' || p.type === 'both')
                               .map((party) => (
                                 <CommandItem
                                   key={party.id}
                                   value={party.name}
                                   onSelect={() => {
                                     setSelectedParty(party);
-                                    setFormData((prev) => ({ ...prev, partyId: party.id }));
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      partyId: party.id,
+                                    }));
                                     setPartyPopoverOpen(false);
                                   }}
                                 >
                                   <Check
                                     className={cn(
-                                      'mr-2 h-4 w-4',
-                                      selectedParty?.id === party.id ? 'opacity-100' : 'opacity-0'
+                                      "mr-2 h-4 w-4",
+                                      selectedParty?.id === party.id
+                                        ? "opacity-100"
+                                        : "opacity-0",
                                     )}
                                   />
                                   <span className="truncate">{party.name}</span>
@@ -291,7 +319,10 @@ export function NewPaymentPlanModal({
                 {/* Optional Sale Link */}
                 <div className="space-y-2">
                   <Label>Link to Sale (Optional)</Label>
-                  <Popover open={salePopoverOpen} onOpenChange={setSalePopoverOpen}>
+                  <Popover
+                    open={salePopoverOpen}
+                    onOpenChange={setSalePopoverOpen}
+                  >
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
@@ -299,11 +330,10 @@ export function NewPaymentPlanModal({
                         className="w-full justify-between"
                         disabled={!formData.partyId}
                       >
-                        {formData.saleId ? (
-                          sales.find((s) => s.id === formData.saleId)?.invoiceNo
-                        ) : (
-                          'Select a sale...'
-                        )}
+                        {formData.saleId
+                          ? sales?.find((s) => s.id === formData.saleId)
+                            ?.invoiceNo
+                          : "Select a sale..."}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
@@ -313,7 +343,7 @@ export function NewPaymentPlanModal({
                         <CommandList>
                           <CommandEmpty>No sales found.</CommandEmpty>
                           <CommandGroup>
-                            {partySales.map((sale) => (
+                            {sales?.map((sale) => (
                               <CommandItem
                                 key={sale.id}
                                 value={sale.invoiceNo}
@@ -328,8 +358,10 @@ export function NewPaymentPlanModal({
                               >
                                 <Check
                                   className={cn(
-                                    'mr-2 h-4 w-4',
-                                    formData.saleId === sale.id ? 'opacity-100' : 'opacity-0'
+                                    "mr-2 h-4 w-4",
+                                    formData.saleId === sale.id
+                                      ? "opacity-100"
+                                      : "opacity-0",
                                   )}
                                 />
                                 <span>{sale.invoiceNo}</span>
@@ -355,14 +387,14 @@ export function NewPaymentPlanModal({
                   <Input
                     id="totalAmount"
                     type="number"
-                    value={formData.totalAmount || ''}
+                    value={formData.totalAmount || ""}
                     onChange={(e) =>
                       setFormData((prev) => ({
                         ...prev,
                         totalAmount: parseFloat(e.target.value) || 0,
                       }))
                     }
-                    className={cn(errors.totalAmount && 'border-red-500')}
+                    className={cn(errors.totalAmount && "border-red-500")}
                   />
                   {errors.totalAmount && (
                     <p className="text-sm text-red-500">{errors.totalAmount}</p>
@@ -376,17 +408,19 @@ export function NewPaymentPlanModal({
                     type="number"
                     min={1}
                     max={24}
-                    value={formData.totalInstallments || ''}
+                    value={formData.totalInstallments || ""}
                     onChange={(e) =>
                       setFormData((prev) => ({
                         ...prev,
                         totalInstallments: parseInt(e.target.value) || 1,
                       }))
                     }
-                    className={cn(errors.totalInstallments && 'border-red-500')}
+                    className={cn(errors.totalInstallments && "border-red-500")}
                   />
                   {errors.totalInstallments && (
-                    <p className="text-sm text-red-500">{errors.totalInstallments}</p>
+                    <p className="text-sm text-red-500">
+                      {errors.totalInstallments}
+                    </p>
                   )}
                 </div>
 
@@ -413,29 +447,38 @@ export function NewPaymentPlanModal({
 
                 <div className="space-y-2">
                   <Label>Start Date *</Label>
-                  <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+                  <Popover
+                    open={datePickerOpen}
+                    onOpenChange={setDatePickerOpen}
+                  >
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
                         className={cn(
-                          'w-full justify-start text-left font-normal',
-                          !formData.startDate && 'text-muted-foreground',
-                          errors.startDate && 'border-red-500'
+                          "w-full justify-start text-left font-normal",
+                          !formData.startDate && "text-muted-foreground",
+                          errors.startDate && "border-red-500",
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {formData.startDate ? format(new Date(formData.startDate), 'PPP') : 'Pick a date'}
+                        {formData.startDate
+                          ? format(new Date(formData.startDate), "PPP")
+                          : "Pick a date"}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
-                        selected={formData.startDate ? new Date(formData.startDate) : undefined}
+                        selected={
+                          formData.startDate
+                            ? new Date(formData.startDate)
+                            : undefined
+                        }
                         onSelect={(date) => {
                           if (date) {
                             setFormData((prev) => ({
                               ...prev,
-                              startDate: date.toISOString().split('T')[0],
+                              startDate: date.toISOString().split("T")[0],
                             }));
                           }
                           setDatePickerOpen(false);
@@ -453,9 +496,12 @@ export function NewPaymentPlanModal({
                   <Label htmlFor="notes">Notes (Optional)</Label>
                   <Input
                     id="notes"
-                    value={formData.notes || ''}
+                    value={formData.notes || ""}
                     onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, notes: e.target.value }))
+                      setFormData((prev) => ({
+                        ...prev,
+                        notes: e.target.value,
+                      }))
                     }
                     placeholder="Add any notes..."
                   />
@@ -480,12 +526,18 @@ export function NewPaymentPlanModal({
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Installments</span>
-                    <span className="font-medium">{formData.totalInstallments}</span>
+                    <span className="font-medium">
+                      {formData.totalInstallments}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Frequency</span>
                     <Badge>
-                      {frequencyOptions.find((f) => f.value === formData.frequency)?.label}
+                      {
+                        frequencyOptions.find(
+                          (f) => f.value === formData.frequency,
+                        )?.label
+                      }
                     </Badge>
                   </div>
                 </div>
@@ -496,7 +548,9 @@ export function NewPaymentPlanModal({
                   <div className="text-sm space-y-1">
                     <div className="flex justify-between">
                       <span>Each installment</span>
-                      <span className="font-medium">{formatCurrency(installmentAmount)}</span>
+                      <span className="font-medium">
+                        {formatCurrency(installmentAmount)}
+                      </span>
                     </div>
                     {lastInstallmentAmount !== installmentAmount && (
                       <div className="flex justify-between text-gray-500">
@@ -515,7 +569,7 @@ export function NewPaymentPlanModal({
                       <div key={index} className="flex justify-between">
                         <span>Installment {index + 1}</span>
                         <span className="text-gray-500">
-                          {format(date, 'dd MMM yyyy')}
+                          {format(date, "dd MMM yyyy")}
                         </span>
                       </div>
                     ))}
@@ -532,7 +586,11 @@ export function NewPaymentPlanModal({
 
         <DialogFooter className="gap-2">
           {step > 1 && (
-            <Button variant="outline" onClick={handleBack} disabled={isSubmitting}>
+            <Button
+              variant="outline"
+              onClick={handleBack}
+              disabled={isSubmitting}
+            >
               Back
             </Button>
           )}
@@ -548,7 +606,7 @@ export function NewPaymentPlanModal({
                   Creating...
                 </>
               ) : (
-                'Create Payment Plan'
+                "Create Payment Plan"
               )}
             </Button>
           )}

@@ -7,10 +7,10 @@ export const useCreateSales = () => {
     })
 }
 
-export const useGetSales = (search: string) => {
+export const useGetSales = (filter: { search?: string, partyId?: string } = {}) => {
     return useQuery({
-        queryKey: ['sales', search],
-        queryFn: () => getSales(search)
+        queryKey: ['sales', filter],
+        queryFn: () => getSales(filter)
     })
 }
 

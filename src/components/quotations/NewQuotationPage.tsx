@@ -82,7 +82,7 @@ export default function NewQuotationPage() {
   const [items, setItems] = useState<QuotationItem[]>([]);
 
   const { data: itemsData } = useGetItems({ search: searchTerm });
-  const { data: partiesData = [] } = useParties('customer');
+  const { data: partiesData = [] } = useParties({ type: 'customer' });
   const availableItems = itemsData?.data || [];
   const parties = partiesData.data || [];
 

@@ -77,7 +77,7 @@ export default function EditSalePage({ params }: { params: Promise<{ id: string 
 
   const availableItems = itemsData?.data || [];
   const parties = partiesData?.data || [];
-
+  console.log('parties', parties)
   // Prefill form when sale data is loaded
   useEffect(() => {
     if (saleData?.data && !initialized) {
