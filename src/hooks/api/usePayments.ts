@@ -19,6 +19,7 @@ export const useCreatePaymentPlans = () => {
 export const useGetPaymentList = (partyId?: string) => {
     return useQuery({
         queryKey: ['payment-plans', partyId],
-        queryFn: () => getPaymentList(partyId)
+        queryFn: () => getPaymentList(partyId),
+        select: data => data.data
     })
 }

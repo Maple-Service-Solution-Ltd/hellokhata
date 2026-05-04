@@ -37,14 +37,11 @@ import { NewPaymentPlanModal } from './NewPaymentPlanModal';
 import { InstallmentSchedule } from './InstallmentSchedule';
 import { DetailModal, DetailRow, DetailSection } from '@/components/shared/DetailModal';
 import type {
-  Party,
   PaymentPlan,
   PaymentPlanSummary,
-  Installment,
-  PaymentPlanFormData,
-  Sale,
+  Installment
 } from '@/types';
-import { usePaymentSummary } from '@/hooks/api/usePayments';
+import { useGetPaymentList, usePaymentSummary } from '@/hooks/api/usePayments';
 
 interface PaymentPlanWithDetails extends PaymentPlan {
   party: { id: string; name: string; phone?: string | null };
@@ -58,11 +55,7 @@ export default function PaymentPlansPage() {
   const { formatCurrency } = useCurrency();
 
   // State
-  const [plans, setPlans] = useState<PaymentPlanWithDetails[]>([]);
-  const [summary, setSummary] = useState<PaymentPlanSummary | null>(null);
-  const [parties, setParties] = useState<Party[]>([]);
-  const [sales, setSales] = useState<Sale[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [summary, setSummary] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
@@ -83,6 +76,11 @@ export default function PaymentPlansPage() {
   // get summery
   const { data: summaryData, isLoading: summaryLoading } = usePaymentSummary();
   const paymentSummary = summaryData?.data || {} as PaymentPlanSummary
+  console.log(paymentSummary)
+  // get all payments plans
+
+  const { data: paymentPlansData, isPending: isLoadingPayments } = useGetPaymentList();
+  const paymentsPlans = paymentPlansData?.data || [];
 
 
   // Record payment
@@ -93,16 +91,6 @@ export default function PaymentPlansPage() {
   const fetchPlanDetails = async (planId: string) => {
 
   };
-
-  // Filter plans
-  const filteredPlans = plans.filter((plan) => {
-    const matchesSearch = searchTerm
-      ? plan.party?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      plan.party?.phone?.includes(searchTerm)
-      : true;
-    const matchesStatus = statusFilter === 'all' || plan.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
 
   // Stats cards data
   const statsCards = [
@@ -204,11 +192,11 @@ export default function PaymentPlansPage() {
           <CardTitle className="text-lg">Payment Plans</CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
+          {isLoadingPayments ? (
             <div className="flex items-center justify-center h-48">
               <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
             </div>
-          ) : filteredPlans.length === 0 ? (
+          ) : paymentsPlans.length === 0 ? (
             <EmptyState
               icon={CreditCard}
               title="No payment plans found"
@@ -222,7 +210,7 @@ export default function PaymentPlansPage() {
           ) : (
             <ScrollArea className="h-[500px] pr-4">
               <div className="space-y-3">
-                {filteredPlans.map((plan) => (
+                {paymentsPlans.map((plan) => (
                   <PaymentPlanCard
                     key={plan.id}
                     plan={plan}

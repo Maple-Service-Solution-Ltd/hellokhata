@@ -8,7 +8,6 @@ export const createParty = async (data: Party) => {
 
 export const getParties = async (filter: { type?: 'customer' | 'supplier', search?: string } = {}) => {
   const res = await client.get("/api/parties", { params: filter });
-  console.log(res.data);
   return res.data;
 };
 
