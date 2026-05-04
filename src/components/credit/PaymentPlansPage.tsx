@@ -62,7 +62,7 @@ export default function PaymentPlansPage() {
   const [summary, setSummary] = useState<PaymentPlanSummary | null>(null);
   const [parties, setParties] = useState<Party[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
@@ -87,9 +87,6 @@ export default function PaymentPlansPage() {
 
   // Record payment
   const handleRecordPayment = async () => { }
-
-
-
 
 
   // Fetch plan details
