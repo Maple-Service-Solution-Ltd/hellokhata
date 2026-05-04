@@ -7,7 +7,6 @@
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-hellokhata.vercel.app-00C896?style=for-the-badge&logo=vercel)](https://hellokhata.vercel.app)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
-[![Prisma](https://img.shields.io/badge/Prisma-6-2D3748?style=for-the-badge&logo=prisma)](https://www.prisma.io/)
 [![License](https://img.shields.io/badge/License-Proprietary-red?style=for-the-badge)](LICENSE)
 
 **The first AI-powered, voice-enabled ERP designed for shop owners in Bangladesh — Bangla-first, offline-capable, and built for the modern SME.**
@@ -26,9 +25,9 @@
 - [Design System](#-design-system)
 - [Architecture](#-architecture)
 - [Project Structure](#-project-structure)
+- [Data Fetching Layer](#-data-fetching-layer)
 - [Getting Started](#-getting-started)
 - [Environment Variables](#-environment-variables)
-- [Database Setup](#-database-setup)
 - [Scripts Reference](#-scripts-reference)
 - [Feature Modules](#-feature-modules)
 - [AI Safety & Boundaries](#-ai-safety--boundaries)
@@ -45,6 +44,8 @@
 **HelloKhata** (হ্যালো খাতা) is an AI-first Retail Business Operating System purpose-built for SME shop owners in Bangladesh. It combines traditional accounting and inventory management with a persistent AI Copilot — including full **voice AI support in both Bangla and English**.
 
 The system runs in **demo mode out of the box** (no login required), making it ideal for investor demos and quick evaluations. It ships with preloaded customers, inventory, and 90 days of transaction history.
+
+> **Frontend-only architecture:** This Next.js application is a pure frontend client. All business logic, data persistence, and authentication are handled by a **separate backend server**. The frontend communicates with the backend exclusively via HTTP API calls managed through TanStack Query.
 
 ### Why HelloKhata?
 
@@ -89,20 +90,20 @@ A collapsible AI panel always visible on the right side of every page.
 - Multi-tier pricing: **Retail, Wholesale, VIP, Minimum price floors**
 - Customer tier auto-routing (Wholesale customer → Wholesale price automatically)
 - Dead Stock Detector — items unsold for 30/60/90+ days with capital-stuck estimation
-- Bulk CSV import with duplicate SKU detection and opening stock ledger entries
-- All stock movements logged to `StockLedger` with full audit trail
+- Bulk CSV import with duplicate SKU detection
+- All stock movements tracked via the backend with full audit trail
 
 ### 💼 Sales & Purchases
 - Fast-entry POS-style sale creation with AI margin meter and stock warnings in the side panel
 - Auto-generated invoice numbers: `INV-YYYYMMDD-XXXX`
 - Quotation system with conversion tracking to sales
 - Multi-account payment support: Cash, Bank, Mobile Wallet (bKash / Nagad)
-- Party ledger entries created automatically on every credit transaction
+- Party ledger entries created on the backend automatically on every credit transaction
 
 ### 🏢 Multi-Branch Support
 - Branch types: Main, Warehouse, Retail, Wholesale
-- Stock transfers between branches with ledger tracking
-- Branch-scoped accounts, sales, and purchases
+- Stock transfers between branches with backend ledger tracking
+- Branch-scoped data fetched from the backend per active branch
 - Branch limits enforced by subscription plan
 
 ### ⌨️ Command Palette
@@ -127,8 +128,6 @@ A collapsible AI panel always visible on the right side of every page.
 | **State Management** | Zustand (with persistence) | ^5.0.6 |
 | **Server State / Data Fetching** | TanStack React Query | ^5.82.0 |
 | **Data Tables** | TanStack React Table | ^8.21.3 |
-| **ORM** | Prisma | ^6.11.1 |
-| **Database** | SQLite (dev) / PostgreSQL (prod) | — |
 | **Auth** | NextAuth.js | ^4.24.11 |
 | **Animation** | Framer Motion | ^12.23.2 |
 | **Charts** | Recharts | ^2.15.4 |
@@ -137,8 +136,11 @@ A collapsible AI panel always visible on the right side of every page.
 | **AI SDK** | z-ai-web-dev-sdk | ^0.0.16 |
 | **i18n** | i18next + next-intl | ^25 / ^4 |
 | **Drag & Drop** | dnd-kit | ^6 |
-| **Runtime** | Bun | ^1.3+ |
+| **Package Manager** | npm | ^10+ |
+| **Runtime** | Node.js | 20+ |
 | **Reverse Proxy** | Caddy | Caddyfile included |
+
+> **Backend:** All server-side business logic, database operations, authentication, and ledger management are handled by a **separate backend server** (not part of this repository). Configure the backend URL via the `NEXT_PUBLIC_API_URL` environment variable.
 
 ---
 
@@ -176,6 +178,8 @@ HelloKhata uses a custom **Elite Dark Design System** — a premium, Stripe-insp
 
 ## 🏗 Architecture
 
+This is a **frontend-only Next.js application**. It does not contain any backend logic, database connections, or server-side data processing. All data is fetched from and sent to a remote backend server via REST API.
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                     Browser / Client                            │
@@ -185,34 +189,33 @@ HelloKhata uses a custom **Elite Dark Design System** — a premium, Stripe-insp
 │  │  AI Drawer   │  │ Command Palette │  │   Voice Modal       │ │
 │  │ (Persistent) │  │    (Ctrl+K)    │  │   (Web Speech API)  │ │
 │  └──────────────┘  └────────────────┘  └─────────────────────┘ │
-└─────────────────────────────┬───────────────────────────────────┘
-                              │ Next.js API Routes (App Router)
-┌─────────────────────────────▼───────────────────────────────────┐
-│                   Next.js Server (API Layer)                    │
 │                                                                 │
-│  ┌──────────────┐  ┌────────────────────┐  ┌────────────────┐  │
-│  │  Auth Guard  │  │    AI Safety Layer  │  │ Branch Context │  │
-│  │  (NextAuth)  │  │  Rate Limiter       │  │  Middleware     │  │
-│  └──────────────┘  │  Circuit Breaker    │  └────────────────┘  │
-│                    │  Confirmation Guard │                      │
-│                    └────────────────────┘                       │
-└──────────────────────────┬──────────────────────────────────────┘
-                           │ Prisma ORM
-┌──────────────────────────▼──────────────────────────────────────┐
-│                 SQLite (dev) / PostgreSQL (prod)                 │
-│  Sales · Purchases · Parties · Items · Accounts · AuditLog     │
-│  StockLedger · PartyLedger · Quotations · Branches             │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │             Data Fetching Layer                         │    │
+│  │  /services      — raw API query functions (axios)       │    │
+│  │  /hooks/api     — TanStack Query hooks (useQuery,       │    │
+│  │                   useMutation) wrapping /services       │    │
+│  └──────────────────────────┬──────────────────────────────┘    │
+└─────────────────────────────┼───────────────────────────────────┘
+                              │ HTTP REST (NEXT_PUBLIC_API_URL)
+┌─────────────────────────────▼───────────────────────────────────┐
+│                  External Backend Server                        │
+│          (Separate repository / deployment)                     │
+│                                                                 │
+│  Business Logic · Database · Auth · Ledger · AI Processing     │
+│  Sales · Purchases · Inventory · Parties · Reports · Branches  │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ### Key Architectural Decisions
 
-- **App Router only** — No Pages Router; all routes and APIs use `app/`
-- **TanStack Query** owns all async server state — no `useEffect` data fetching patterns
+- **Frontend-only** — No backend code lives in this repo; all API calls go to `NEXT_PUBLIC_API_URL`
+- **App Router only** — All pages use `app/` directory; no Pages Router
+- **`/services`** holds all raw async functions that call the backend API (using axios)
+- **`/hooks/api`** wraps those service functions in TanStack Query hooks (`useQuery`, `useMutation`, `useInfiniteQuery`)
+- **TanStack Query** owns all server state — caching, background refetch, optimistic updates, and error handling
 - **Zustand** with localStorage persistence handles UI state, offline mutation queue, and demo data
-- **Prisma transactions** ensure atomicity for all multi-step writes (sale → ledger → stock → account balance)
-- **Branch context middleware** automatically scopes every DB query to the active branch
-- **AI safety guards** (rate limiter + confirmation guard + circuit breaker) wrap every AI-initiated write
+- **AI safety guards** (rate limiter + confirmation guard + circuit breaker) run client-side before any AI-triggered API call
 
 ---
 
@@ -222,22 +225,9 @@ HelloKhata uses a custom **Elite Dark Design System** — a premium, Stripe-insp
 hellokhata/
 │
 ├── src/
-│   ├── app/                            # Next.js App Router
+│   ├── app/                            # Next.js App Router (pages only)
 │   │   ├── page.tsx                    # Dashboard — the AI Control Room
 │   │   ├── layout.tsx                  # Root layout
-│   │   ├── api/                        # API Route Handlers
-│   │   │   ├── sales/route.ts          # Sales CRUD + ledger entries
-│   │   │   ├── purchases/route.ts      # Purchases + stock updates
-│   │   │   ├── payments/route.ts       # Payment processing
-│   │   │   ├── items/
-│   │   │   │   └── import/route.ts     # CSV bulk import
-│   │   │   ├── inventory/
-│   │   │   │   ├── adjustment/         # Stock adjustments
-│   │   │   │   └── transfer/           # Branch-to-branch transfers
-│   │   │   ├── accounts/route.ts       # Cash / Bank / Wallet accounts
-│   │   │   ├── quotations/route.ts     # Quotation management
-│   │   │   └── ai/                     # AI endpoint handlers
-│   │   │
 │   │   ├── sales/                      # Sales pages
 │   │   ├── purchases/                  # Purchase pages
 │   │   ├── inventory/                  # Inventory pages
@@ -247,6 +237,39 @@ hellokhata/
 │   │   │   ├── credit-control/         # Credit control report
 │   │   │   └── ...
 │   │   └── settings/                   # Settings pages
+│   │
+│   ├── services/                       # ⭐ API Query Functions
+│   │   │                               # Raw async functions that call the
+│   │   │                               # backend REST API (via axios).
+│   │   │                               # No TanStack Query logic here —
+│   │   │                               # only plain async data fetchers.
+│   │   ├── sales.service.ts            # getSales(), createSale(), etc.
+│   │   ├── purchases.service.ts        # getPurchases(), createPurchase(), etc.
+│   │   ├── inventory.service.ts        # getItems(), adjustStock(), etc.
+│   │   ├── parties.service.ts          # getParties(), getPartyLedger(), etc.
+│   │   ├── payments.service.ts         # getPayments(), createPayment(), etc.
+│   │   ├── accounts.service.ts         # getAccounts(), createAccount(), etc.
+│   │   ├── quotations.service.ts       # getQuotations(), convertToSale(), etc.
+│   │   ├── branches.service.ts         # getBranches(), transferStock(), etc.
+│   │   ├── reports.service.ts          # getCreditAging(), getHealthScore(), etc.
+│   │   └── ai.service.ts               # sendAIChat(), triggerAIAction(), etc.
+│   │
+│   ├── hooks/
+│   │   └── api/                        # ⭐ TanStack Query Hooks
+│   │       │                           # Wraps /services functions with
+│   │       │                           # useQuery / useMutation / useInfiniteQuery.
+│   │       │                           # Components import ONLY from here —
+│   │       │                           # never from /services directly.
+│   │       ├── useSales.ts             # useSalesQuery(), useCreateSaleMutation()
+│   │       ├── usePurchases.ts         # usePurchasesQuery(), useCreatePurchaseMutation()
+│   │       ├── useInventory.ts         # useItemsQuery(), useStockAdjustMutation()
+│   │       ├── useParties.ts           # usePartiesQuery(), usePartyLedgerQuery()
+│   │       ├── usePayments.ts          # usePaymentsQuery(), useCreatePaymentMutation()
+│   │       ├── useAccounts.ts          # useAccountsQuery(), useCreateAccountMutation()
+│   │       ├── useQuotations.ts        # useQuotationsQuery(), useConvertToSaleMutation()
+│   │       ├── useBranches.ts          # useBranchesQuery(), useStockTransferMutation()
+│   │       ├── useReports.ts           # useCreditAgingQuery(), useHealthScoreQuery()
+│   │       └── useAI.ts               # useAIChatMutation(), useAIActionsQuery()
 │   │
 │   ├── components/
 │   │   ├── ai/
@@ -273,11 +296,9 @@ hellokhata/
 │   │   ├── offlineQueueStore.ts        # Offline mutation queue
 │   │   └── auditStore.ts               # Audit log state
 │   │
-│   ├── hooks/
-│   │   └── queries/index.ts            # TanStack Query hooks
-│   │
 │   ├── lib/
-│   │   ├── branch-context.ts           # Branch-scoped query utilities
+│   │   ├── axios.ts                    # Axios instance with base URL + auth headers
+│   │   ├── branch-context.ts           # Active branch context utilities
 │   │   ├── pricing/
 │   │   │   └── plans.ts                # Free/Starter/Growth/Intelligence config
 │   │   └── ai/
@@ -292,17 +313,11 @@ hellokhata/
 │       ├── index.ts                    # All TypeScript interfaces & types
 │       └── ai-control.ts               # AI feature-specific types
 │
-├── prisma/
-│   ├── schema.prisma                   # Full database schema
-│   ├── seed.ts                         # Demo data seeder
-│   └── migrations/                     # Migration history
-│
 ├── public/
 │   └── locales/
 │       ├── bn/translation.json         # Bangla translations
 │       └── en/translation.json         # English translations
 │
-├── db/                                 # SQLite database files (dev only)
 ├── download/                           # File download staging
 ├── upload/                             # File upload staging
 ├── mini-services/                      # Micro-utilities and helpers
@@ -315,10 +330,143 @@ hellokhata/
 ├── components.json                     # shadcn/ui configuration
 ├── Caddyfile                           # Caddy reverse proxy config (production)
 ├── .dockerignore
-├── bun.lock
+├── package.json
 ├── tsconfig.json
 └── FEATURE_ANALYSIS_REPORT.md          # Detailed feature implementation status
 ```
+
+---
+
+## 🔌 Data Fetching Layer
+
+This project uses a **two-layer data fetching architecture** to keep API logic, caching, and component code cleanly separated.
+
+### Layer 1 — `/services` (Raw Query Functions)
+
+The `src/services/` directory contains plain async functions that talk directly to the backend REST API using **axios**. These functions have no awareness of React or TanStack Query — they are simple, testable, typed async functions.
+
+```ts
+// src/services/sales.service.ts
+import { apiClient } from '@/lib/axios';
+import type { Sale, CreateSalePayload, PaginatedResponse } from '@/types';
+
+export const getSales = async (params?: {
+  page?: number;
+  branchId?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}): Promise<PaginatedResponse<Sale>> => {
+  const { data } = await apiClient.get('/sales', { params });
+  return data;
+};
+
+export const createSale = async (payload: CreateSalePayload): Promise<Sale> => {
+  const { data } = await apiClient.post('/sales', payload);
+  return data;
+};
+
+export const getSaleById = async (id: string): Promise<Sale> => {
+  const { data } = await apiClient.get(`/sales/${id}`);
+  return data;
+};
+```
+
+```ts
+// src/lib/axios.ts
+import axios from 'axios';
+
+export const apiClient = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
+});
+
+// Attach auth token on every request
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('auth_token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+```
+
+### Layer 2 — `/hooks/api` (TanStack Query Hooks)
+
+The `src/hooks/api/` directory wraps service functions with **TanStack Query** (`useQuery`, `useMutation`, `useInfiniteQuery`). This is the only layer components interact with — they never import from `/services` directly.
+
+```ts
+// src/hooks/api/useSales.ts
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getSales, createSale, getSaleById } from '@/services/sales.service';
+import type { CreateSalePayload } from '@/types';
+
+// Query keys — centralized for consistent cache invalidation
+export const salesKeys = {
+  all: ['sales'] as const,
+  list: (params?: object) => [...salesKeys.all, 'list', params] as const,
+  detail: (id: string) => [...salesKeys.all, 'detail', id] as const,
+};
+
+// Fetch paginated sales list
+export const useSalesQuery = (params?: {
+  page?: number;
+  branchId?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}) => {
+  return useQuery({
+    queryKey: salesKeys.list(params),
+    queryFn: () => getSales(params),
+  });
+};
+
+// Fetch single sale by ID
+export const useSaleDetailQuery = (id: string) => {
+  return useQuery({
+    queryKey: salesKeys.detail(id),
+    queryFn: () => getSaleById(id),
+    enabled: !!id,
+  });
+};
+
+// Create a new sale — invalidates the sales list cache on success
+export const useCreateSaleMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: CreateSalePayload) => createSale(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.all });
+    },
+  });
+};
+```
+
+**Using the hook in a component:**
+
+```tsx
+// src/components/sales/SalesList.tsx
+import { useSalesQuery } from '@/hooks/api/useSales';
+
+export function SalesList() {
+  const { data, isLoading, isError } = useSalesQuery({ page: 1 });
+
+  if (isLoading) return <Spinner />;
+  if (isError) return <ErrorMessage />;
+
+  return (
+    <ul>
+      {data?.items.map((sale) => (
+        <li key={sale.id}>{sale.invoiceNumber}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+### Convention Rules
+
+- ✅ Components import **only** from `src/hooks/api/`
+- ✅ `src/hooks/api/` imports **only** from `src/services/`
+- ✅ `src/services/` imports **only** from `src/lib/axios` and `src/types/`
+- ❌ Components must **never** import directly from `src/services/`
+- ❌ `src/services/` must **never** contain `useQuery`, `useMutation`, or any React hooks
 
 ---
 
@@ -328,10 +476,9 @@ hellokhata/
 
 | Tool | Minimum Version |
 |---|---|
-| [Bun](https://bun.sh) | 1.3+ |
+| [Node.js](https://nodejs.org) | 20.x |
+| [npm](https://npmjs.com) | 10+ |
 | Git | any |
-
-> **Note:** Bun is the preferred runtime. All scripts are written for `bun`. Node.js 20+ works as a fallback.
 
 ### 1. Clone the Repository
 
@@ -343,42 +490,29 @@ cd hellokhata
 ### 2. Install Dependencies
 
 ```bash
-bun install
+npm install
 ```
 
 ### 3. Configure Environment Variables
 
 ```bash
 cp .env.example .env.local
-# Then fill in your values (see Environment Variables section below)
+# Fill in your values — see Environment Variables section below
 ```
 
-### 4. Set Up the Database
+### 4. Start Development Server
 
 ```bash
-# Push the Prisma schema to the database
-bun run db:push
-
-# Generate the Prisma client
-bun run db:generate
-
-# Seed with demo data (50 customers, 120 items, 90 days of transactions)
-bun run db:seed
+npm run dev
 ```
 
-### 5. Start Development Server
+Open [http://localhost:3000](http://localhost:3000). The app runs in **demo mode by default** — no login required, no backend needed for the UI shell.
+
+### 5. Production Build
 
 ```bash
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000). The app runs in **demo mode by default** — no login required.
-
-### 6. Production Build
-
-```bash
-bun run build
-bun run start
+npm run build
+npm run start
 ```
 
 ---
@@ -392,54 +526,26 @@ Create `.env.local` in the project root:
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=your_nextauth_secret_here
 
-# ── Database ─────────────────────────────────────────────
-# Development (SQLite — zero setup)
-DATABASE_URL="file:./db/dev.db"
-
-# Production (PostgreSQL)
-# DATABASE_URL="postgresql://user:password@host:5432/hellokhata"
+# ── Backend API ───────────────────────────────────────────
+# URL of the external backend server — all data fetching points here
+NEXT_PUBLIC_API_URL=https://your-backend-server.com/api
 
 # ── AI / LLM ─────────────────────────────────────────────
+# Required for AI Copilot features
 OPENAI_API_KEY=sk-...
 ```
 
-> The app works fully in demo mode without `OPENAI_API_KEY` — AI features will use pre-generated mock responses.
-
----
-
-## 🗄 Database Setup
-
-HelloKhata uses **Prisma ORM** with SQLite for local development and PostgreSQL for production.
-
-### Key Database Models
-
-| Model | Purpose |
-|---|---|
-| `Party` | Customers & suppliers with credit limit and balance tracking |
-| `Item` | Products with 4-tier pricing (retail, wholesale, VIP, minimum) |
-| `Sale` / `SaleItem` | Sales transactions with line items |
-| `Purchase` / `PurchaseItem` | Purchase transactions with line items |
-| `Payment` | Payment records linked to parties and accounts |
-| `Account` | Cash / Bank / Mobile Wallet accounts |
-| `PartyLedger` | Double-entry ledger for every customer/supplier movement |
-| `StockLedger` | Full stock movement history (sales, purchases, adjustments, transfers) |
-| `Quotation` | Quotations with quote-to-sale conversion tracking |
-| `Branch` | Multi-branch with manager assignment and cash tracking |
-| `AuditLog` | Action audit trail with IP, user agent, old/new values |
+> All business data (sales, inventory, customers, reports) is served by the backend at `NEXT_PUBLIC_API_URL`. The app works in demo mode without a live backend — AI features require `OPENAI_API_KEY`.
 
 ---
 
 ## 📜 Scripts Reference
 
 ```bash
-bun dev              # Start dev server → http://localhost:3000
-bun run build        # Production build (copies static + standalone)
-bun run start        # Start production server
-bun run lint         # ESLint check across the project
-bun run db:push      # Push Prisma schema to DB (no migration file)
-bun run db:generate  # Regenerate Prisma client after schema changes
-bun run db:migrate   # Create and apply migration (dev)
-bun run db:reset     # ⚠️ Reset DB completely and re-seed
+npm run dev        # Start dev server → http://localhost:3000
+npm run build      # Production build
+npm run start      # Start production server
+npm run lint       # ESLint check across the project
 ```
 
 ---
@@ -448,22 +554,22 @@ bun run db:reset     # ⚠️ Reset DB completely and re-seed
 
 | Module | Status | Notes |
 |---|---|---|
-| Sales & POS | ✅ Stable | Multi-tier pricing, auto ledger entries |
-| Purchases | ✅ Stable | Stock updates, supplier ledger |
-| Inventory | ✅ Stable | Stock ledger, CSV import, adjustments |
+| Sales & POS | ✅ Stable | Multi-tier pricing, backend ledger entries |
+| Purchases | ✅ Stable | Stock updates via backend |
+| Inventory | ✅ Stable | CSV import, stock adjustments |
 | Party / CRM | ✅ Stable | Credit tracking, aging buckets |
-| Accounts (Cash/Bank/Wallet) | ✅ Stable | Multi-account, balance tracking |
-| Multi-Branch | ✅ Stable | Stock transfer, branch-scoped queries |
+| Accounts (Cash/Bank/Wallet) | ✅ Stable | Multi-account, balance from backend |
+| Multi-Branch | ✅ Stable | Stock transfer, branch-scoped API calls |
 | Quotations | ✅ Stable | Quote-to-sale conversion |
 | AI Copilot | ✅ Stable | Brief, Chat, Actions tabs |
 | Voice AI | ✅ Stable | Bangla + English, Web Speech API |
 | Business Health Score | ✅ Stable | 5-component score with playbooks |
 | Credit Control | ✅ Stable | Aging, risk scoring, collection list |
 | Command Palette | ✅ Stable | Fuzzy search, `Ctrl+K` |
-| PDF Invoice Export | 🚧 Planned | Library not yet integrated |
-| Sales / Purchase Returns | 🚧 Planned | Return models not built yet |
-| Soft Delete / Undo | 🚧 Planned | Hard delete currently used |
-| SMS / WhatsApp Reminders | 🚧 Planned | No SMS integration yet |
+| PDF Invoice Export | 🚧 Planned | Not yet implemented |
+| Sales / Purchase Returns | 🚧 Planned | Pending backend support |
+| Soft Delete / Undo | 🚧 Planned | Pending backend support |
+| SMS / WhatsApp Reminders | 🚧 Planned | No integration yet |
 | Offline Service Worker | 🚧 Partial | Zustand queue ready, SW pending |
 
 See [FEATURE_ANALYSIS_REPORT.md](FEATURE_ANALYSIS_REPORT.md) for the full implementation breakdown with severity ratings across 12 feature areas.
@@ -472,13 +578,13 @@ See [FEATURE_ANALYSIS_REPORT.md](FEATURE_ANALYSIS_REPORT.md) for the full implem
 
 ## 🛡 AI Safety & Boundaries
 
-The AI layer is hardened with multiple safety mechanisms to prevent accidental writes and abuse.
+The AI layer is hardened with multiple client-side safety mechanisms before any request is sent to the backend.
 
 ### Confirmation Guard (`src/lib/ai/guards/confirmationGuard.ts`)
 - Every AI write action generates a **draft hash** before execution
-- The user must confirm with a recognized word (Bangla or English) before the action runs
+- The user must confirm with a recognized word (Bangla or English) before the action fires
 - Drafts expire after **5 minutes** via TTL
-- Cross-business security check prevents execution in the wrong business context
+- Cross-business security check prevents execution in the wrong context
 
 ### Rate Limiter — Token Bucket (`src/lib/ai/security/rateLimiter.ts`)
 
@@ -492,7 +598,6 @@ The AI layer is hardened with multiple safety mechanisms to prevent accidental w
 - Automatic retry with **exponential backoff**
 - Per-tool timeout handling
 - Circuit opens after repeated failures to prevent cascade failures
-- Supports atomic Prisma transactions for grouped AI write operations
 
 ### Plan-Based AI Limits
 
@@ -548,16 +653,17 @@ We welcome contributions! Please follow these guidelines to keep the codebase co
 
 1. Fork the repo and create your branch from `main`
 2. Write your code following the conventions below
-3. Run `bun run lint` and fix all warnings
+3. Run `npm run lint` and fix all warnings
 4. Open a Pull Request with a clear title and description linking the related issue
 
 ### Code Conventions
 
 - All code is **TypeScript** — avoid `any` without an inline comment explaining why
-- Use **TanStack Query** for all data fetching — no raw `useEffect + fetch` patterns
+- **Always add new query functions to `/services`** and wrap them in a hook inside `/hooks/api` — never fetch directly inside components
+- Components must **never** import from `src/services/` directly — always use `src/hooks/api/`
+- Use **TanStack Query** for all server state — no `useEffect + fetch` patterns anywhere
 - All client state lives in **Zustand stores** — not `useState` for server-derived data
-- Every write that touches multiple Prisma models must use a **Prisma transaction**
-- All AI write operations must pass through `confirmationGuard` and `rateLimiter`
+- All AI write operations must pass through `confirmationGuard` and `rateLimiter` before hitting the API
 - New Bangla UI strings must have matching entries in `public/locales/bn/translation.json`
 
 ### Commit Message Format
@@ -567,16 +673,17 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/):
 ```
 feat: add PDF invoice generation with Bangla support
 fix: correct credit aging bucket 90+ day calculation
-docs: add environment variable reference to README
+docs: add data fetching layer explanation to README
 refactor: extract voice modal into standalone component
-chore: update Prisma to 6.12.0
+chore: update TanStack Query to 5.83
 ```
 
 ### Pull Request Checklist
 
 - [ ] No TypeScript errors (`tsc --noEmit`)
-- [ ] Linting passes (`bun run lint`)
-- [ ] Prisma transactions used for all multi-step writes
+- [ ] Linting passes (`npm run lint`)
+- [ ] New API calls added to `/services`, wrapped in `/hooks/api`
+- [ ] Components only import from `hooks/api`, not from `services` directly
 - [ ] New Bangla strings added to `bn/translation.json`
 - [ ] PR description explains **what** changed and **why**
 - [ ] Related issue linked in the PR body
@@ -587,19 +694,18 @@ chore: update Prisma to 6.12.0
 
 ### In Progress
 - [ ] PDF invoice generation (A4 / A5, Bengali + English templates)
-- [ ] Sales Return & Purchase Return models with reversal logic
+- [ ] Sales Return & Purchase Return UI (pending backend endpoints)
 - [ ] Service Worker for true offline-first background sync
 
 ### Planned
-- [ ] Soft delete + Undo across all models (add `deletedAt` to schema)
-- [ ] RBAC middleware — permission enforcement on all API routes
+- [ ] Soft delete + Undo (pending backend support)
 - [ ] SMS / WhatsApp payment reminders (bKash-integrated)
 - [ ] Unit conversion system (box → pieces, kg → grams)
 - [ ] Batch / expiry date tracking for pharmacies & food shops
 - [ ] Cash drawer open/close session tracking
 - [ ] In-app support chat / help center
 - [ ] Excel (XLSX) import support alongside CSV
-- [ ] Account transfer between Cash / Bank / Wallet with reconciliation
+- [ ] Account transfer UI between Cash / Bank / Wallet
 
 ---
 
